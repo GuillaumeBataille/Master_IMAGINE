@@ -1,0 +1,7 @@
+suite exo 3 TD 3 :
+"Tr(A) = somme valeurs propres = somme éléments diagonaux = 1 +2 + 3 +4 = 10
+0 + 0 +0 +lamba = 10 donc la dernière valeur propre est 10 donc A diagonalisable semblable à 
+Mat(0 0 0 0 
+          0 0 0 0
+          0 0 0 0
+          0 0 0 10)
