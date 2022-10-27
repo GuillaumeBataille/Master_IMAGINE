@@ -1,3 +1,7 @@
+Compile and execute from CACHE_COMPLEXITY :  clear && g++ ./src/main.cpp ./src/Eval-perf.cpp -o ./build/main && ./build/main
+
+Main : 
+
 #include <vector>
 #include <immintrin.h>
 #include <random>
