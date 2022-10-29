@@ -1,0 +1,81 @@
+/*
+x = vide;
+c = chaise;
+r = robot;
+p = porte;
+Position[2][nb_couloir]
+Position[2][nb_salle]
+M = mur;
+*/
+
+Environnement courant -> Mat_total[i,j];
+
+
+//Position empilement
+//empilement initialiser cst 
+
+Constructeur :
+// cst_agent(Position _pos ,TransfertFunction _tp){
+    
+    empilement  // case d'empilement proche de la porte
+    
+}
+
+Constructeur :
+// cst_agent(Position _pos){
+    
+    // Attribut :
+        Position current_pos; //Position courante du robot
+
+        Position empilement;  // case d'empilement proche de la porte
+        // field of view :
+            Position[8] Voisinage; //Voisinage via current_pos 
+            Position[3] FOV_up; // current_pos
+            Position[3] FOV_down;
+            Position[3] FOV_left;
+            Position[3] FOV_right;
+
+        bool currently_triggered; // 
+        bool hold_a_chair;
+        //vector<Position>[nb_objet]
+
+
+    // Methodes :
+
+        void trigger {
+            for each "field of view":
+                if (Mat_total[pos] == "c")
+                currently_triggered = true;
+                
+                //vector['c'].add(pos);
+                
+                break;
+        }
+
+        //Appel constant tant que currently_triggered == true;
+        void grab_a_chair{
+            si une des cases de mon voisinage == pos (position obtenue lors du trigger et stocké)
+                currently_triggered = false;
+                hold_a_chair = true;
+        }
+
+        
+
+        void triggerResponse(){
+
+            int sign= 
+            for(int i =0; i < emplacement.geti())
+        }
+
+        // 3 behavior :
+           
+            1- J'ai pas de chaise et j'ai rien de trigger
+                -next move -> bouger random (si possible);
+            2- J'ai un trigger (vu une chaise)
+                -next move -> bouger vers la position qui a causer le trigger;
+            3- J'ai une chaise
+                -next move -> aller vers la position d'empilement;
+        // New -> 2 behavior;
+        
+
+}
