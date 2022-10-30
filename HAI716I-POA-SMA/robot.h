@@ -55,4 +55,5 @@ public:
                                             // set_is_in_room a l'nverse de sa valeur
                                             //  Si la porte est P_close; on la transforme en P_open
                                             //  se mettre sur la porte et compute comme si on était sur la porte
+    void test();
 };
