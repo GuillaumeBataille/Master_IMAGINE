@@ -8,7 +8,7 @@
 using namespace std;
 #include <stdlib.h>
 #include <math.h>
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
 #include <iomanip>
 #include <algorithm>
 #include <cfloat>
