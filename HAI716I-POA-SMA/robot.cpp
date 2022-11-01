@@ -1,12 +1,15 @@
 #include "robot.h"
-#include "Position.cpp"
+#include <iostream>
+
+#define VIDE ' '
+int mod(int k, int n) {  return ((k %= n) < 0) ? k+n : k;  }
 
 // Constructeur:
 robot::robot(Position pos,char **Environnement) // On lui donne une position et l'Environnement (matrice de char)
 {
 
     robot::current_pos = pos; // Pos courante = position de création;
-    Environnement[pos.c][pos.r] = 'r';
+    Environnement[pos.r][pos.c] = 'r';
 
     robot::empilement;        // A set uniquement en sortie de salle
 
@@ -14,7 +17,7 @@ robot::robot(Position pos,char **Environnement) // On lui donne une position et 
 
     robot:: is_in_a_room = true; //Pour l'instant un robot sera forcément initialiser dans une salle
 
-
+    checkpoint = Position {0,0};
     //Direction (sens anti horaire)
     robot::direction[0]=Position{1,0};//up 
     robot::direction[1]=Position{0,1};//right
@@ -28,10 +31,7 @@ robot::robot(Position pos,char **Environnement) // On lui donne une position et 
 
     compute_direction(); // On recupte les direction en fonction de la position initiale
 
-    in_view = long_right_trigger(Environnement); // Appel a long_right_trigger pour savoir ce qu'on a en vue même lors de la création (car il pourra avoir une chaise aligné)
-
-    in_view == 'c' ? currently_triggered = true : currently_triggered = false; //En fonction de ce qu'on voit on change le comportement
-    currently_triggered? behavior = 1 : behavior = 2; 
+    behavior = 1;
 }
 
 
@@ -39,289 +39,234 @@ robot::robot(Position pos,char **Environnement) // On lui donne une position et 
 // Mes triggers: 
 
 char robot::front_trigger(char **Environnement){ // Retourne ce qu'on choppe en front de la position courante
-    Position front_pos = add(current_pos,Front);
-    return Environnement[front_pos.r][front_pos.c];
+    return Environnement[Front.r][Front.c];
 }
 
 char robot::left_trigger(char **Environnement){ // Retourne ce qu'on choppe en left de la position courante
-    Position left_pos = add(current_pos,Left);
-    return Environnement[left_pos.r][left_pos.c];
+    return Environnement[Left.r][Left.c];
 }
 
 char robot::long_right_trigger(char **Environnement){
         Position add_in_FOV = robot::Right; //Variable pour parcourir toute la ligne du FOV
-        while (Environnement[add_in_FOV.r][add_in_FOV.c] == 'x'){ // Tant qu'on est en train de regarder du vide (qu'on a pas rencontrer d'obstacle)
-        add_in_FOV = add(add_in_FOV,Right); // On y ajoute le vecteur Right de taille 1
+        while (Environnement[add_in_FOV.r][add_in_FOV.c] == VIDE){ // Tant qu'on est en train de regarder du vide (qu'on a pas rencontrer d'obstacle)
+        add_in_FOV = add(add_in_FOV,direction[mod(current_direction_id+1, 4)]); // On y ajoute le vecteur Right de taille 1
+        //std::cout << add_in_FOV.r<< " "<< add_in_FOV.c <<" : "<<Environnement[add_in_FOV.r][add_in_FOV.c]  << std::endl;
         }
         // On a vu un truc
-        Environnement[add_in_FOV.r][add_in_FOV.c] == 'c'? currently_triggered = true: currently_triggered = false;
     return Environnement[add_in_FOV.r][add_in_FOV.c]; // On recupère ce que notre vue à collide
 }
 
 
 void robot::compute_direction(){ // Recompute les directions (après un rotate par exemple)
-    robot::Front = add(current_pos,direction[current_direction_id % 4]); //On suppose qu'il va regarder vers le haut a son initialisation
-    robot::Left = add(current_pos,direction[current_direction_id-1 % 4]); // Sa gauche s'il regarde vers le haut
-    robot::Right = add(current_pos,direction[current_direction_id+1 % 4]);// Sa droite s'il regarde vers le haut
-}
+    robot::Front = add(current_pos,direction[mod(current_direction_id, 4)]); //On suppose qu'il va regarder vers le haut a son initialisation
+    robot::Left = add(current_pos,direction[mod(current_direction_id-1, 4)]); // Sa gauche s'il regarde vers le haut
+    robot::Right = add(current_pos,direction[mod(current_direction_id+1, 4)]);// Sa droite s'il regarde vers le haut
+};
 
 void robot::rotate(){
-    robot::current_direction_id = (current_direction_id + 1) % 4; // Changement de la direction courante en tourant a droite
+    robot::current_direction_id ++ ; // Changement de la direction courante en tourant a droite
     compute_direction(); // On recompute les directions 
 };
 
 void robot::grab_a_chair(char ** Environnement){
     robot::nb_chairs_grabbed++; // Une chaise de plus sur le dos
-    Environnement[robot::Front.r][robot::Front.r] = 'x'; // On supprime la chaise de l'environnement
+    Environnement[robot::Front.r][robot::Front.c] = VIDE; // On supprime la chaise de l'environnement
 };
 
 void robot::move(char **Environnement){
-    Environnement[current_pos.r][current_pos.c] = 'x'; // Suppression du r courant
-    if (robot::front_trigger(Environnement) == 'x') // Si la ou on doit aller y'a pas de soucis
+    //Environnement[current_pos.r][current_pos.c] == 'T' ? Environnement[current_pos.r][current_pos.c] = 'T':Environnement[current_pos.r][current_pos.c] = VIDE; // Suppression du r courant
+    Environnement[current_pos.r][current_pos.c] = VIDE; // Suppression du r courant
+   
+    if (robot::front_trigger(Environnement) == VIDE) // Si la ou on doit aller y'a pas de soucis
         {
-            current_pos = add(robot::current_pos,robot::direction[current_direction_id]); // Nouvelle position du robot en fct de sa direction courante
+            current_pos = add(robot::current_pos,robot::direction[mod(current_direction_id,4)]); // Nouvelle position du robot en fct de sa direction courante
             Environnement[current_pos.r][current_pos.c] = 'r'; // Ecriture de r a la position courante
+            compute_direction();
         }
-    else if (robot::front_trigger(Environnement) == 'M' || 'P') // Cas ou on est face a un mur ou d'une porte
+    
+    else if (robot::front_trigger(Environnement) == 'M' || robot::front_trigger(Environnement) == 'P' ) // Cas ou on est face a un mur ou d'une porte
         {
         robot::rotate(); // On tourne vers la droite
-        move(Environnement); // On retente de move dans cette nouvelle direction
+        //Environnement[current_pos.r][current_pos.c] == 'T' ? Environnement[current_pos.r][current_pos.c] = 'T': Environnement[current_pos.r][current_pos.c] = 'r'; // Ecriture de r a la position courante
+        compute_direction();
         }
+
     else if (robot::front_trigger(Environnement) == 'c') // Cas ou on est face a une chaise
     {
-        grab_a_chair(Environnement); // On recup cette chaise et on retry un move sur cette case
-        move(Environnement);
+        grab_a_chair(Environnement); // On recup cette chaise
+        current_pos = add(robot::current_pos,robot::direction[mod(current_direction_id,4)]); // Nouvelle position du robot en fct de sa direction courante
+        Environnement[current_pos.r][current_pos.c] = 'r'; // Ecriture de r a la position courante
+        compute_direction();
+        if(long_right_trigger(Environnement) == 'c'){
+            behavior = 2;
+        }
+        
+        //checkpoint = current_pos;
     }
+    
+    else if (robot::front_trigger(Environnement) == 'T'){
+            current_pos = add(robot::current_pos,robot::direction[mod(current_direction_id,4)]); // Nouvelle position du robot en fct de sa direction courante
+            Environnement[current_pos.r][current_pos.c] = 'T'; // Ecriture de r a la position courante
+    }
+};
+
+
+void robot::drop_chairs(char ** Environnement){
+    if (left_trigger(Environnement) == VIDE) // Si a gauche de la porte il y a rien
+    {
+        Environnement[Left.r][Left.c] = 'T'; // T pour tas de chaises
+        nb_chairs_grabbed = 0;
+    }
+    else // Sinon on les pose a droite de la porte
+    {
+        Environnement[Right.r][Right.c] = 'T'; // T pour tas de chaises
+        nb_chairs_grabbed = 0;
+    }
+};
+
+void robot::pass_a_door(char ** Environnement){ 
+    Environnement[current_pos.r][current_pos.c] = VIDE; // Suppression du r courant
+    current_pos = add(robot::current_pos,robot::direction[mod(current_direction_id,4)]); // En avance de deux dans la direction souhaité
+    // Marquage de la porte comme Pclean ici si necessaire en case (current_pos)
+    current_pos = add(robot::current_pos,robot::direction[mod(current_direction_id,4)]);
+    Environnement[current_pos.r][current_pos.c] = 'r'; // Ecriture de r a la position courante
+    compute_direction();
 };
 
 void robot::next_move(char **Environnement){
     // Behavior 1 : parcours tranquillou en longeant les murs
-    
     if(behavior == 1){
-        move(Environnement);
+        if (checkpoint == Position {0,0} && front_trigger(Environnement) == 'M'){
+            checkpoint = current_pos;
+        }
+        if (long_right_trigger(Environnement) == 'c') // Si on regarde une chaise
+        {
+           ////std::cout<<"on a vu une chaise"<<std::endl;
+            //std::cout<<"rotating : "<<"Front old : "<< Front.r <<","<< Front.c<<std::endl;
+            rotate(); // On fait aligner le robot avec la cible
+            //std::cout<<"rotating : "<<"Front new : "<< Front.r <<","<< Front.c<<std::endl;
+            robot::behavior = 2; // On passe le behavior a 2
+            //robot::checkpoint = robot::current_pos;
+        }
+        else // Sinon
+        {
+           // //std::cout<<"going to move "<<std::endl;
+            move(Environnement); // On fait juste un deplacement
+            compute_direction();
+           // //std::cout<<"moved"<<std::endl;
+            if (checkpoint == current_pos) // Si lorsqu'on avance on retombe sur une case checkpoint, c'est qu'on a fait le tour de la salle sans retrouver de chaise, on a donc fini
+            {
+                behavior = 4;
+            }
+        }
     }
-    // Behavior 2 : J'ai trigger une chaise
-    if(behavior == 2){
-        rotate(); // On tourne a droite, ce qui va nous aligner avec le 
-        move(Environnement);
+    // Behavior 2 : J'ai trigger une chaise en longeant les murs
+    else if(behavior == 2){
+       // //std::cout <<" On est dans behavior 2 "<<std::endl;
+        //show_direction(Environnement);
+       if(front_trigger(Environnement) != 'c') // Tant qu'on a pas une chaise collé en front
+        {
+           // //std::cout<<"current pos "<<current_pos.r<<","<<current_pos.c<<std::endl;
+            move(Environnement); // On avance
+        }
+        else{
+       // //std::cout<<"Grab a chair"<<std::endl;
+        grab_a_chair(Environnement);
+        rotate(); // On fait demi tour (deux rotate vers la droite)
+        rotate();
+        robot::behavior = 3;
+        }
     }
-    // Behavior
+    // Behavior 3 : J'ai pris la chaise via le comportement 2, je fais demi-tour vers le checkpoint au mur
+    else if (behavior == 3){
+        if (front_trigger(Environnement) != 'M'){ // Tant qu'il n'est pas de retour collé au mur au checkpoint
+            move(Environnement);
+            compute_direction();
+        }
+        else{
+       // //std::cout<<"rotating : "<<"Front old : "<< Front.r <<","<< Front.c<<std::endl;
+        rotate(); // On fait aligner le robot avec la cible
+        compute_direction();
+       // //std::cout<<"rotating : "<<"Front new : "<< Front.r <<","<< Front.c<<std::endl;
+        behavior = 1;
 
-
-}
-
-
-/*
-char trigger_Voisinage(char **Map)
-{
-    char pos_trig;
-    for (Position view_pos : robot::Voisinage) // Pour toute les positions de mon voisinage
-    {
-        if (M[view_pos.r] != 'x')
+        
     }
-    return pos_trig;
+    }
+    // Behavior 4 : J'ai fini mon netooyage, je cherche maintenant une porte pour sortir vers un couloir
+    else if (behavior == 4){
+        //std::cout<<"behave = "<< 4 <<" and "<< left_trigger(Environnement) <<std::endl;
+        
+        if (left_trigger(Environnement) != ('P')){ // Tant qu'on a pas une porte a notre gauche
+            move(Environnement);
+        }
+        else{
+        //std::cout<<" en face de la porte"<<std::endl;
+        rotate(); // Trois rotate pour passer a gauche de la ou on regarde et donc s'aligner avec la porte
+        rotate();
+        rotate();
+        drop_chairs(Environnement); // Deposer les chaises
+        Environnement[Front.r][Front.c] = 'p';
+        pass_a_door(Environnement); // Passage de la porte
+        is_in_a_room = false; //On quitte la salle
+        behavior = 5;
+        }
+    }
+    // Behavior 5 : Je suis dans un couloir, je cherche une porte pour retourner dans une salle afin de la nettoyer
+    else if (behavior == 5){
+        checkpoint = Position{0,0};
+        if(front_trigger(Environnement) == (VIDE)){ // Tant qu'on a pas une porte en front
+            move(Environnement);
+        }
+        else { // On est en face d'une porte
+        front_trigger(Environnement) == 'P'? behavior = 1 : behavior = 6;
+        //behavior = 1;
+        pass_a_door(Environnement); // On arrive donc dans une Salle
+        is_in_a_room = true;
+        rotate();// On se tourne verse la gauche
+        rotate();
+        rotate();
+        }
+    }
+    else if (behavior == 6){ // Viens dans une salle propre
+        if(left_trigger(Environnement) != ('P')){
+                move(Environnement);
+        }
+        else{
+        rotate();
+        rotate();
+        rotate();
+        Environnement[Front.r][Front.c] = 'p';
+        pass_a_door(Environnement); // On arrive donc dans une Salle
+        behavior = 5;
+        }
+       /* if(left_trigger(Environnement) != ('P')) // Tant qu'on ne trouve pas une porte 'P'
+        {
+            move(Environnement);
+        }
+        rotate();
+        rotate();
+        rotate();// On se tourne verse la gauche
+        rotate();
+        rotate();
+        Environnement[Front.r][Front.c] = 'p';
+        pass_a_door(Environnement); // On arrive donc dans une Salle
+        is_in_a_room = false;
+        behavior = 5 ; */
+        
+    }
 };
-// Trigger_chair;
 
-void trigger_chair
-{
-    for (Position view_pos : robot::Voisinage)
-    { // Pour chaque position du voisinage
+void robot::show_direction(char **Environnement){
+    Environnement[Left.r][Left.c] = 'L';
+    //Environnement[Right.r][Right.c] = 'R';
+    Environnement[Front.r][Front.c] = 'U';
+    int r,c;
+    Position Right_bis = Right;
+    while(Environnement[Right_bis.r][Right_bis.c] == VIDE){
+        Environnement[Right_bis.r][Right_bis.c] = 'o'; // representation de la vue
+        Right_bis = add (Right_bis,direction[mod(current_direction_id+1, 4)]);
     }
-            for each
-                "field of view" : if (Mat_total[pos] == "c")
-                                      currently_triggered = true;
-
-            // vector['c'].add(pos);
-
-            break;
-}
-
-x = vide;
-c = chaise;
-r = robot;
-p = porte;
-Position[2][nb_couloir]
-Position[2][nb_salle]
-M = mur;
-
-
-// Environnement courant -> Mat_total[i,j];
-
-// Position empilement
-// empilement initialiser cst
-
-// Constructeur :
-//  cst_agent(Position _pos ,TransfertFunction _tp){
-
-//   empilement // case d'empilement proche de la porte
-//}
-
-// Constructeur :
-
-cst_agent(Position _pos)
-{
-
-    // Attribut :
-    Position current_pos; // Position courante du robot
-
-    Position empilement;   // case d'empilement proche de la porte
-                           // field of view :
-    Position[8] Voisinage; // Voisinage via current_pos
-    Position[3] FOV_up;    // current_pos
-    Position[3] FOV_down;
-    Position[3] FOV_left;
-    Position[3] FOV_right;
-
-    bool currently_triggered; //
-    bool hold_a_chair;
-    // vector<Position>[nb_objet]
-
-    // Methodes :
-
-    void trigger
-    {
-            for each
-                "field of view" : if (Mat_total[pos] == "c")
-                                      currently_triggered = true;
-
-            // vector['c'].add(pos);
-
-            break;
-    }
-
-    // Appel constant tant que currently_triggered == true;
-    void grab_a_chair
-    {
-        si une des cases de mon voisinage == pos(position obtenue lors du trigger et stocké)
-                                                 currently_triggered = false;
-        hold_a_chair = true;
-    }
-  direction
-    u = up (1,0)
-    d = down; (-1,0)
-    l = left; (0,-1)
-    r = right;(0,1)
-
-    // direciton sera generé aléatoirement;
-    void moove(direction d)
-    {
-        if (Voisinage[current_pos + d] == 'x')
-        // Fait mon move
-    }
-
-    bool
-    isVide(Environement env, Position _pos)
-    {
-        env.isVide(_pos.geti(), _pos.getj());
-    }
-    void
-    moove()
-    {
-    }
-
-    // si objet devant moi  ;
-    // tant que objet devant moi deplace sur cote
-    // deplace dans direction
-    void
-    mooveDirection(Position d)
-    {
-
-        for (Position d1 = new Position(d); getBump() || !isVide(Voisinage, new Position(pos.geti() + d1.geti.(), pos.getj() + d1.getj.()));
-             d.equals(Direction.up) ? d1.setj(d1.getj() + 1) : d1.seti(d1.geti() + 1))
-        {
-            pos = new Position(d1);
-        }
-        if (getBump())
-        {
-            for (Position d1 = new Position(d); getBump() || !isVide(Voisinage, new Position(pos.geti() + d1.geti.(), pos.getj() + d1.getj.()));
-                 d.geti() != 0 ? d1.setj(d1.getj() - 1) : d1.seti(d1.geti() - 1))
-            {
-                pos = new Position(d1);
-            }
-        }
-        if (getBump())
-        {
-            return EXIT_FAILURE;
-        }
-        d.geti() != 0 ? pos.seti(pos.geti() + d.geti()) : pos.setj(pos.getj() + d.getj());
-    }
-
-    class Environement
-    {
-        char **matrix; // std::array<std::array<char , sz_col> ,sz_row >matrix;
-        size_t sz_row, sz_col;
-        class Alphabet
-        {
-            bool isChaise(int i, int j)
-            {
-                return matrix[i][j] == 'c';
-            }
-            bool isPorte(int i, int j)
-            {
-                return matrix[i][j] == 'P';
-            }
-            bool isVide(int i, int j)
-            {
-                return !(isPorte(i, j) || isChaise(i, j));
-            }
-
-        } Alphabet alphabet;
-
-        Environement(char **matrix, const size_t sz_col, const size_t sz_row)
-        {
-
-            memcpy(this.matrix, matrix, sizeof(char) * sz_col * sz_row);
-            this.sz_col = sz_col;
-            this.sz_row = sz_row;
-        }
-
-        bool isChaise(int i, int j)
-        {
-            return alphabet.isChaise(i, j);
-        }
-        bool isPorte(int i, int j)
-        {
-            return alphabet.isPorte(i, j);
-        }
-        bool isVide(int i, int j)
-        {
-            return alphabet.isVide(i, j);
-        }
-
-    }
-
-    class Position
-    {
-        int i, j;
-
-        Direction()
-        {
-            this.i = 0;
-            this.j = 0;
-        }
-
-        Direction(Position _pos)
-        {
-            this.i = _pos.geti();
-            this.j = _pos.getj();
-        }
-
-    }
-
-    void
-    triggerResponse()
-    {
-
-        int sign_i = (pos.geti() < emplacement.geti() ? 1 : -1);
-        for (; pos.geti() != emplacement.geti(); agent.mooveDirection(new Position(0, sign_i)))
-            ;
-        int sign_j = (pos.getj() < emplacement.getj() ? 1 : -1);
-        for (; pos.getj() != emplacement.getj(); agent.mooveDirection(new Position(sign_j, 0)))
-            ;
-    }
-
-    // 3 behavior :
-    1 - J 'ai pas de chaise et j' ai rien de trigger - next move->bouger random(si possible);
-    2 - J 'ai un trigger (vu une chaise) - next move->bouger vers la position qui a causer le trigger; 3 - J ' ai une chaise - next move->aller vers la position d' empilement;
-}*/
+    Environnement[Right_bis.r][Right_bis.c] = 'H'; // Ce qu'on touche
+    
+};
