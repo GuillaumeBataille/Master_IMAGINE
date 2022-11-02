@@ -74,13 +74,11 @@ void afficherNewSalle(char **M, int tailleSalle)
 		{
 			std::string s;
 			s.push_back(M[i][j]);
-	
-			mvprintw(i,j*2,s.c_str());
-				
+
+			mvprintw(i, j * 2, s.c_str());
 		}
 	}
 	refresh();
-
 }
 char **genererCouloir(int lignesCouloir, int colonnesCouloir)
 {
@@ -110,10 +108,8 @@ void afficherCouloir(char **M, int lignesCouloir, int colonnesCouloir)
 		{
 			std::string s;
 			s.push_back(M[i][j]);
-			mvprintw(i,j*2,s.c_str());
-		
+			mvprintw(i, j * 2, s.c_str());
 		}
-	
 	}
 	refresh();
 }
@@ -158,7 +154,6 @@ void remplirNewSalle(char **M, int tailleSalle)
 		creerChaise(M, tailleSalle, random, random2);
 	}
 }
-
 
 char **fusionDroiteCouloirSalle(char **S, int tailleSalle, char **C, int lignesCouloir, int colonnesCouloir)
 {
@@ -274,38 +269,40 @@ char **fusionHautCouloirSalle(char **S, int tailleSalle, char **C, int lignesCou
 
 	return M;
 }
-char** fusionBasCouloirSalle(char** S,int tailleSalle,char** C,int lignesCouloir,int colonnesCouloir){
-	int lignesFusion = tailleSalle + lignesCouloir -1 ;
-	int colonnesFusion = tailleSalle ;
-	char** M = new char*[lignesFusion];
-	for(int i = 0; i < lignesFusion; i++)
-    	M[i] = new char[colonnesFusion];
-	
-	for(int i = 0 ; i < lignesFusion; i++)
+char **fusionBasCouloirSalle(char **S, int tailleSalle, char **C, int lignesCouloir, int colonnesCouloir)
+{
+	int lignesFusion = tailleSalle + lignesCouloir - 1;
+	int colonnesFusion = tailleSalle;
+	char **M = new char *[lignesFusion];
+	for (int i = 0; i < lignesFusion; i++)
+		M[i] = new char[colonnesFusion];
+
+	for (int i = 0; i < lignesFusion; i++)
 	{
-		for(int j = 0 ; j < colonnesFusion ; j++)
+		for (int j = 0; j < colonnesFusion; j++)
 		{
-			M[i][j]=' ';
+			M[i][j] = ' ';
 		}
 	}
-	for(int i = 0 ; i < tailleSalle ; i++)
+	for (int i = 0; i < tailleSalle; i++)
 	{
-		for(int j = 0 ; j < tailleSalle ; j++)
+		for (int j = 0; j < tailleSalle; j++)
 		{
-			M[i][j]=S[i][j];
+			M[i][j] = S[i][j];
 		}
 	}
 
-	for(int i = 0 ; i < lignesCouloir; i++)
+	for (int i = 0; i < lignesCouloir; i++)
 	{
-		for(int j = 0 ; j < colonnesCouloir ; j++)
+		for (int j = 0; j < colonnesCouloir; j++)
 		{
-			M[i+tailleSalle-1][j+1]=C[i][j]; //1 arbitraire
+			M[i + tailleSalle - 1][j + 1] = C[i][j]; //1 arbitraire
 		}
 	}
 
-	for(int i = 0 ; i < colonnesCouloir - 2 ; i++){
-		M[tailleSalle-1][i+colonnesCouloir-1]='P';
+	for (int i = 0; i < colonnesCouloir - 2; i++)
+	{
+		M[tailleSalle - 1][i + colonnesCouloir - 1] = 'P';
 	}
 
 	return M;
@@ -376,10 +373,19 @@ char **fusionGaucheNewCouloirSalle(char **S, int lignesSalle, int colonnesSalle,
 			M[i][j + colonnesCouloir - 1] = S[i][j];
 		}
 	}
-	for (int i = 0; i < lignesCouloir - 2; i++)
+
+	int indice2 = 0;
+	int nbindice = 0;
+	for (int i = 0; i < lignesSalle - 1; i++)
 	{
-		M[indice + 1 + i][colonnesCouloir - 1] = 'P';
+		if (M[i][colonnesCouloir - 2] == 'M')
+		{
+			if (nbindice == 0)
+				indice2 = i;
+			nbindice++;
+		}
 	}
+	M[indice2 + 1][colonnesCouloir - 1] = 'P';
 
 	return M;
 }
@@ -416,45 +422,53 @@ char **fusionHautNewCouloirSalle(char **S, int lignesSalle, int colonnesSalle, c
 		}
 	}
 
-	for (int i = 0; i < colonnesCouloir - 2; i++)
+	int indice2 = 0;
+	int nbindice = 0;
+	for (int i = 0; i < colonnesFusion - 1; i++)
 	{
-		M[lignesCouloir - 1][i + (colonnesSalle / 3) + 1] = 'P';
+		if (M[lignesCouloir - 2][i] == 'M')
+		{
+			if (nbindice == 0)
+				indice2 = i;
+			nbindice++;
+		}
 	}
+	M[lignesCouloir - 1][indice2 + 1] = 'P';
 
 	return M;
 }
-char** fusionBasNewCouloirSalle(char** S,int lignesSalle,int colonnesSalle,char** C,int lignesCouloir,int colonnesCouloir,int indice){
-	int lignesFusion = lignesSalle + lignesCouloir -1 ;
+char **fusionBasNewCouloirSalle(char **S, int lignesSalle, int colonnesSalle, char **C, int lignesCouloir, int colonnesCouloir, int indice)
+{
+	int lignesFusion = lignesSalle + lignesCouloir - 1;
 	int colonnesFusion = colonnesSalle;
-	char** M = new char*[lignesFusion];
-	for(int i = 0; i < lignesFusion; i++)
-    	M[i] = new char[colonnesFusion];
-	
-	for(int i = 0 ; i < lignesFusion; i++)
-	{
-		for(int j = 0 ; j < colonnesFusion ; j++)
-		{
-			M[i][j]=' ';
-		}
-	}
-	for(int i = 0 ; i < lignesSalle ; i++)
-	{
-		for(int j = 0 ; j < colonnesSalle ; j++)
-		{
-			M[i][j]=S[i][j];
-		}
-	}
+	char **M = new char *[lignesFusion];
+	for (int i = 0; i < lignesFusion; i++)
+		M[i] = new char[colonnesFusion];
 
-	for(int i = 0 ; i < lignesCouloir; i++)
+	for (int i = 0; i < lignesFusion; i++)
 	{
-		for(int j = 0 ; j < colonnesCouloir ; j++)
+		for (int j = 0; j < colonnesFusion; j++)
 		{
-			M[i+lignesSalle-1][j+indice]=C[i][j]; //indice (arbitraire)
+			M[i][j] = ' ';
+		}
+	}
+	for (int i = 0; i < lignesSalle; i++)
+	{
+		for (int j = 0; j < colonnesSalle; j++)
+		{
+			M[i][j] = S[i][j];
 		}
 	}
 
+	for (int i = 0; i < lignesCouloir; i++)
+	{
+		for (int j = 0; j < colonnesCouloir; j++)
+		{
+			M[i + lignesSalle - 1][j + indice] = C[i][j]; //indice (arbitraire)
+		}
+	}
 
-	M[lignesSalle-1][colonnesCouloir-1]='P';
+	M[lignesSalle - 1][colonnesCouloir - 1] = 'P';
 
 	return M;
 }
@@ -492,16 +506,18 @@ char **fusionHautNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle, c
 		}
 	}
 
-	int nbPortes = 0;
-	for (int i = 0; i < colonnesSalle; i++)
+	int indice = 0;
+	int nbindice = 0;
+	for (int i = 0; i < colonnesCouloir - 1; i++)
 	{
-		if (S[0][i] == 'M')
-			nbPortes++;
+		if (M[lignesCouloir - 1][i] == 'M')
+		{
+			if (nbindice == 0)
+				indice = i;
+			nbindice++;
+		}
 	}
-	for (int i = 0; i < nbPortes - 2; i++)
-	{
-		M[lignesCouloir - 1][i + (colonnesSalle / 3) + 1] = 'P';
-	}
+	M[lignesCouloir - 1][indice + 1] = 'P';
 
 	return M;
 }
@@ -549,10 +565,7 @@ char **fusionDroiteNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle,
 				M[i + indice][j + colonnesSalle - 1] = C[i][j];
 		}
 	}
-	for (int i = 0; i < nbindice - 2; i++)
-	{
-		M[indice + i + 1][colonnesSalle - 1] = 'P';
-	}
+	M[indice + 1][colonnesSalle - 1] = 'P';
 
 	return M;
 	/*
@@ -600,48 +613,53 @@ char **fusionDroiteNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle,
 	return M;
 	*/
 }
-char** fusionBasNewSalleCouloir(char** S,int lignesSalle,int colonnesSalle,char** C,int lignesCouloir,int colonnesCouloir){
+char **fusionBasNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle, char **C, int lignesCouloir, int colonnesCouloir)
+{
 
-	int lignesFusion = lignesSalle + lignesCouloir - 1 ;
-	int colonnesFusion = max(colonnesSalle,colonnesCouloir) ;
-	char** M = new char*[lignesFusion];
-	for(int i = 0; i < lignesFusion; i++)
-    	M[i] = new char[colonnesFusion];
+	int lignesFusion = lignesSalle + lignesCouloir - 1;
+	int colonnesFusion = max(colonnesSalle, colonnesCouloir);
+	char **M = new char *[lignesFusion];
+	for (int i = 0; i < lignesFusion; i++)
+		M[i] = new char[colonnesFusion];
 
-	for(int i = 0 ; i < lignesFusion ; i++)
+	for (int i = 0; i < lignesFusion; i++)
 	{
-		for(int j = 0 ; j < colonnesFusion ; j++)
+		for (int j = 0; j < colonnesFusion; j++)
 		{
-			M[i][j]=' ';
+			M[i][j] = ' ';
 		}
 	}
-	for(int i = 0 ; i < lignesSalle-1; i++)
+	for (int i = 0; i < lignesSalle - 1; i++)
 	{
-		for(int j = 0 ; j < colonnesSalle; j++)
+		for (int j = 0; j < colonnesSalle; j++)
 		{
-			M[i][j]=S[i][j];
+			M[i][j] = S[i][j];
 		}
 	}
-	
-	int indice=0;
-	int nbindice=0;
-	for(int i = 0 ; i < colonnesSalle-1 ; i++){
-		if(M[lignesSalle-2][i]=='M') {
-			if(nbindice==0) indice = i;
+
+	int indice = 0;
+	int nbindice = 0;
+	for (int i = 0; i < colonnesSalle - 1; i++)
+	{
+		if (M[lignesSalle - 2][i] == 'M')
+		{
+			if (nbindice == 0)
+				indice = i;
 			nbindice++;
 		}
 	}
-	
-	for(int i = 0 ; i < lignesCouloir; i++)
+
+	for (int i = 0; i < lignesCouloir; i++)
 	{
-		for(int j = 0 ; j < colonnesCouloir ; j++)
+		for (int j = 0; j < colonnesCouloir; j++)
 		{
-			if(M[i+lignesSalle-2][j+indice]==' ') M[i+lignesSalle-2][j+indice]=C[i][j];
+			if (M[i + lignesSalle - 2][j + indice] == ' ')
+				M[i + lignesSalle - 2][j + indice] = C[i][j];
 		}
 	}
 
-	M[lignesSalle-2][indice+1]='P';
-	
+	M[lignesSalle - 2][indice + 1] = 'P';
+
 	return M;
 }
 char **fusionGaucheNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle, char **C, int lignesCouloir, int colonnesCouloir)
@@ -690,10 +708,7 @@ char **fusionGaucheNewSalleCouloir(char **S, int lignesSalle, int colonnesSalle,
 		}
 	}
 
-	for (int i = 0; i < nbindice - 2; i++)
-	{
-		M[indice + i + 1][i + colonnesCouloir - 1] = 'P';
-	}
+	M[indice + 1][colonnesCouloir - 1] = 'P';
 	return M;
 }
 char **fusionNewFinal(char **S, int lignesSalle, int colonnesSalle, char **C, int lignesCouloir, int colonnesCouloir, int orientation, int indice)
