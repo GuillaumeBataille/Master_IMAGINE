@@ -113,11 +113,7 @@ public:
                     result.raySquareIntersection = raysquare; // On récupère l'intersection
                 }
             }
-
-            // std::cout<<"Square size : " << squares.size() <<std::endl;
         }
-        // TODO calculer les intersections avec les objets de la scene et garder la plus proche
-
         return result;
     }
 
@@ -175,10 +171,22 @@ public:
             s.m_radius = 1.f;
             s.build_arrays();
             s.material.type = Material_Mirror;
-            s.material.diffuse_material = Vec3(1., 1., 1.);
+            s.material.diffuse_material = Vec3(1, 0, 0);
             s.material.specular_material = Vec3(0.2, 0.2, 0.2);
             s.material.shininess = 20;
 
+            meshes.resize(meshes.size() + 1);
+            meshes[meshes.size() - 1] = s;
+        }
+
+        {
+            squares.resize(squares.size() + 1);
+            Square &s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3(0., 0., 1.);
+            s.material.specular_material = Vec3(0.8, 0.8, 0.8);
+            s.material.shininess = 20;
             meshes.resize(meshes.size() + 1);
             meshes[meshes.size() - 1] = s;
         }
@@ -207,7 +215,7 @@ public:
             Square &s = squares[squares.size() - 1];
             s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             s.build_arrays();
-            s.material.diffuse_material = Vec3(0.8, 0.8, 0.8);
+            s.material.diffuse_material = Vec3(0., 0., 1.);
             s.material.specular_material = Vec3(0.8, 0.8, 0.8);
             s.material.shininess = 20;
         }
@@ -331,7 +339,7 @@ public:
             s.m_radius = 0.75f;
             s.build_arrays();
             s.material.type = Material_Glass;
-            s.material.diffuse_material = Vec3(1., 1., 1.);
+            s.material.diffuse_material = Vec3(0., 0., 0.);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
             s.material.transparency = 0.;
