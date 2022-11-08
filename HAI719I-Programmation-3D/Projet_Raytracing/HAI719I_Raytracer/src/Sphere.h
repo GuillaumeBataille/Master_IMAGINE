@@ -121,6 +121,7 @@ public:
             intersection.intersection = o + (d * racine1);
             intersection.secondintersection = o + (d * racine2);
             intersection.normal = intersection.intersection - c;
+            intersection.normal.normalize();
         }
         else
         {

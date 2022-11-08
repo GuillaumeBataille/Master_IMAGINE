@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/mnt/e/ludojeu115/Desktop/tps_m1/Programmation 3D/Projet",
+            "binaryPath": "/mnt/e/ludojeu115/Desktop/tps_m1/Programmation 3D/Projet/main",
+            "binaryArgs": []
+        }
+    ]
+}
