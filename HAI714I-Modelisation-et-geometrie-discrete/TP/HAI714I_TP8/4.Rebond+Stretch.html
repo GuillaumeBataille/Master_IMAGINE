@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheed" href="css/webgl.css">
+	<script type="text/javascript" src="js/webgl-utils.js"></script>
+	<script type="text/javascript" src="js/gl-matrix-min.js"></script>
+	<script type="text/javascript" src="js/Shader.js"></script>
+	<script type="text/javascript" src="js/BufferedDataType.js"></script>
+	<script type="text/javascript" src="js/BufferedData.js"></script>
+	<script type="text/javascript" src="js/Shape.js"></script>
+</head>
+<body>
+	<canvas id="canvas0" width="400" height="400"></canvas>
+	
+	<script type="x-shader/x-vertex" id="vscs">#version 300 es
+	in vec2 js_coords;
+	uniform mat4x4 js_u_projection;
+	uniform mat4x4 js_u_modelView;
+	void main(){
+	    gl_Position =  js_u_projection * js_u_modelView * vec4(js_coords, 0.0, 1.0);
+	}
+	</script>
+	<script type="x-shader/x-fragment" id="fscs">#version 300 es
+		precision mediump float;
+		uniform int js_u_uniform_colors;
+		uniform vec4 js_u_color;
+		out vec4 glFragColor;
+		void main(){
+	    	glFragColor = js_u_color ;
+		}
+	</script>
+	<script type="text/javascript">
+		let shader = new Shader("canvas0", "vscs", "fscs");
+		let gl = shader.init(0,.3,.4,false,false);
+		let ballSize = 15;
+		let ball = new Shape([0,shader.height/2,0], ballSize, [.5,.5,.5,0.8], [1,1,1,0.3], 64);
+		let r,v,b;
+		r = Math.random();
+		v = Math.random();
+		b = Math.random();
+		ball.setBgColor(r,v,b);
+		let duration = 3000;
+		let id, animationOn, startTime;
+		function lerp(t){
+			return  t;
+		}
+		function bounce(t){
+			for (let a =0,b=1,result;1;a+=b,b/=2){
+				if (t >= (7-4*a)/11)
+				return -Math.pow((11-6*a-11*t)/4,2) + Math.pow(b,2);
+			}
+		}
+		function out(distortFunc){
+			return function(t){
+				return (1-distortFunc(1-t));
+			}
+	}		function strech(t){
+			return 3 * t * t -2.5 * t + 1;
+		}
+		function display(t){
+			if(startTime == null) startTime = t;
+			let relativeTime = (t - startTime)/duration;
+			let d;
+			if (relativeTime <= 1){
+				animationOn = true;
+				id = requestAnimationFrame(display);
+				shader.initDisplay(0,.3,.4);
+				shader.initModelView();
+				d = (out(bounce))(relativeTime)*(shader.height - ballSize);
+				// Vers la droite -> x positif et vers la gauche -> x negatif 
+				shader.translate(relativeTime*shader.width/5,-d,0);
+				d /= shader.height - ballSize
+				d = strech(d)
+				shader.scale(d,1,1);
+				ball.drawWith(shader);
+				console.log("relativeTime : "+ relativeTime);
+			}
+			else
+			if (animationOn) {
+				id = requestAnimationFrame(display); // Boucle
+				startTime = t;
+				animationOn = false;
+			} 
+			}
+
+
+		
+		id = requestAnimationFrame(display);
+	</script>
+</body>
+</html>
