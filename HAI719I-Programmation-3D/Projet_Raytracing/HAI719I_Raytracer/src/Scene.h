@@ -9,7 +9,7 @@
 
 #include <GL/glut.h>
 
-#define ECHANTILLONAGE_LIGHT 10
+#define ECHANTILLONAGE_LIGHT 20
 
 enum LightType
 {
@@ -41,6 +41,7 @@ struct RaySceneIntersection
     float t;
     Vec3 normal;   // ajout normal
     Vec3 position; // ajout position
+    Vec3 bounce_direction; // Ajout bounce direction
     RayTriangleIntersection rayMeshIntersection;
     RaySphereIntersection raySphereIntersection;
     RaySquareIntersection raySquareIntersection;
@@ -116,6 +117,7 @@ public:
                     result.raySphereIntersection = raysphere; // On récupère l'intersection
                     result.normal = raysphere.normal;         // On recupère la normale
                     result.position = raysphere.intersection; // On recupère la position de l'intersection
+                    result.bounce_direction = raysphere.bounce_direction; // On recupère la direction reflechie
                 }
             }
         }
@@ -135,83 +137,114 @@ public:
                     result.raySquareIntersection = raysquare; // On récupère l'intersection
                     result.normal = raysquare.normal;         // On récupère la normale
                     result.position = raysquare.intersection; // On recupère la position de l'intersection
+                    result.bounce_direction = raysquare.bounce_direction; // On recupère la direction reflechie
                 }
             }
         }
         return result;
     }
 
-    void phong(RaySceneIntersection RSI, Vec3 &color, Material mat)
+ void  phong(RaySceneIntersection RSI, Vec3 &color, Material mat, Ray &ray){
+    for (unsigned long int i = 0; i < lights.size(); i++)
+        {
+            Vec3 L = lights[i].pos - RSI.position; // Le vecteur depuis le point d'intersection vers la lumière courante
+            L.normalize();
+            //DIFFUSE
+              double lightvalue = Vec3::dot(L, RSI.normal); // On le recup
+                if (lightvalue <= 0) continue;
+            Vec3 diffuse = Vec3::compProduct(lights[i].material, mat.diffuse_material) * lightvalue;
+            //SPECULAR
+            Vec3 R = 2 * (Vec3::dot(RSI.normal, L) * RSI.normal) - L;
+            Vec3 V = ray.origin() - RSI.position;
+            R.normalize();
+            V.normalize();
+            Vec3 specular = Vec3::compProduct(lights[i].material,mat.specular_material * pow(Vec3::dot(R,V),mat.shininess));
+            color = diffuse + specular;
+ }color += mat.ambient_material;
+ }
+
+
+    void shadow(RaySceneIntersection RSI, Vec3 &color, Material mat)
     {
-        double ombrage = 0.; // Valeur de l'ombrage en un point pour toute les lights
         for (unsigned long int i = 0; i < lights.size(); i++)
         {
             Vec3 L = lights[i].pos - RSI.position; // Le vecteur depuis le point d'intersection vers la lumière courante
             double range = L.length();             // La distance entre la position et la lumière
             L.normalize();
-
-            double lightvalue = 0;                     // La value de dot n L
-            if (Vec3::dot(L, RSI.normal) > 0)          // Si on a bien un positif en dot product de n et L
-                lightvalue = Vec3::dot(L, RSI.normal); // On le recup
-            Vec3 diffuse = Vec3(mat.diffuse_material[0] * lights[i].material[0] * lightvalue, mat.diffuse_material[1] * lights[i].material[1] * lightvalue, mat.diffuse_material[2] * lights[i].material[2] * lightvalue);
-            Vec3 specular = mat.specular_material * pow(lightvalue, fmax(mat.shininess, 0.0));
-            color += (diffuse + specular);
             double shadowvalue = 0;           // Valeur de l'ombre courante (O si obstacle et 1 sinon)
             Ray light = Ray(RSI.position, L); // origine la position de l'intersect et direction la light
-
+            
             // OMBRES DURES - cas avec type of light spherical / ponctuel
             if (lights[i].type == LightType_Spherical)
-            {
-                if (computeIntersection(light, 0.0001).t >= range) // Si j'atteinds la lumière
+            {   RaySceneIntersection inter2 = computeIntersection(light, 0.0001);
+                if (inter2.t >= range)
                 {
-                    ombrage = 1; // Le 0.001 sur le znear me sert a ne pas considérer comme obstacle un vertice voisin ou moi même
+                    shadowvalue = 1; // Le 0.001 sur le znear me sert a ne pas considérer comme obstacle un vertice voisin ou moi même
                     // Pas besoin de shadowvalue car ici l'ombre est nette, soit 0 soit 1;
                 }
             }
-            else if (lights[i].type == LightType_Quad)
+            else
             {
                 // OMBRES DOUCES
                 // création du square de lumière a partir du mesh ajouté dans l'init de la scène de cornell
                 Vec3 bottom_left = lights[i].quad.vertices[0].position;
                 Vec3 right = lights[i].quad.vertices[1].position - bottom_left;
                 Vec3 up = lights[i].quad.vertices[3].position - bottom_left;
-                //std::cout << "up " << up << std::endl;
-                //Vec3 v = (double(rand()) / RAND_MAX * right + double(rand()) / RAND_MAX * up + bottom_left) - RSI.position;
+
+
+                for (unsigned long int j = 0; j < ECHANTILLONAGE_LIGHT; j++)
+                {
                 Vec3 randx = (double(rand()) / RAND_MAX * right);
                 Vec3 randy = (double(rand()) / RAND_MAX * up);
                 Vec3 randpoint = randx + randy + bottom_left;
 
-                //std::cout << "lightpoint " << lights[i].pos << std::endl;
                 Vec3 vec_vers_randpoint = randpoint - RSI.position;
+                double rangebis = vec_vers_randpoint.norm();
                 vec_vers_randpoint.normalize();
-                for (unsigned long int j = 0; j < ECHANTILLONAGE_LIGHT; j++)
-                {
-                    light = Ray(RSI.position, vec_vers_randpoint);
-                    if (computeIntersection(light, 0.0001).t >= range) // Si j'atteinds la lumière
-                    {
-                        shadowvalue += 1; // Le 0.001 sur le znear me sert a ne pas considérer comme obstacle un vertice voisin ou moi même
-                    }
+                light = Ray(RSI.position, vec_vers_randpoint);
+                RaySceneIntersection inter3 = computeIntersection(light,0.0001);
+                if(!(inter3.intersectionExists && inter3.t < range && inter3.t > 0.0001)){
+                    shadowvalue ++;
                 }
-                shadowvalue /= ECHANTILLONAGE_LIGHT; // Recupère le pourcentage de light qui est passé
-                ombrage += shadowvalue;              // Ajout dans ombrage pour en faire la moyenne pour toutes les i lights
+                }
+                shadowvalue /= ECHANTILLONAGE_LIGHT; // Recupère le pourcentage de light qui est passé en divisant par le nombre d'échantillons
+                 color *= shadowvalue/lights.size(); // On pondère l'intensité lumineuse (ambiante + diffuse + speculaire) par l'ombrage
             }
-        }
-        color *= ombrage; // On pondère l'intensité lumineuse (ambiante + diffuse + speculaire) par l'ombrage
+        }              
+       
     }
+
+
 
     Vec3 rayTraceRecursive(Ray ray, int NRemainingBounces, double znear)
     {
 
         // TODO appeler la fonction recursive
         Vec3 color;
+        int cpt_mirror = 0;
         RaySceneIntersection RSI = computeIntersection(ray, znear);
-        if (!RSI.intersectionExists)
+        if (!RSI.intersectionExists) // Si y'a pas d'intersection
             return Vec3(0, 0, 0);
 
-        Material mat = getRayMaterial(RSI);
+        Material mat = getRayMaterial(RSI); // On recupère le material courant
         color = mat.ambient_material; // Récup couleur ambiant
-        phong(RSI, color, mat);
-        //std::cout << "color : " << color << std::endl;
+        phong(RSI, color, mat, ray); // On appelle phong pour y ajouter la couleur de l'intersection (diffuse + specular) modulé par l'ombre
+        shadow(RSI,color,mat);
+        //computeSoftShadow(color, RSI, ECHANTILLONAGE_LIGHT);
+        if (NRemainingBounces == 0) { //Si y'a plus de rebond
+            if (mat.type == Material_Mirror)
+            cpt_mirror++;
+            else{
+            return color;
+            }
+        }
+        // Parametrage du nouveau point de depart du rayon 
+        Vec3 new_origin = RSI.position; //La position de l'intersection devient l'origine du rayon
+        Vec3 new_direction = RSI.bounce_direction ; // La direction bounce (reflexion via old direction et normale) devient la direction du rayon
+        Ray Ray_bounce = Ray(new_origin,new_direction);
+        //TODO RaySceneIntersection raySceneIntersection = computeIntersection(ray);
+        color += rayTraceRecursive(Ray_bounce,NRemainingBounces-1+cpt_mirror, 0.001); // On retire un rayon en décrémentant le nbr de rayon a tirer 
+        // znear =0.001 c'est pour pas qu'il se cogne sur lui même ou sur son voisin
         return color;
     }
 
@@ -312,16 +345,32 @@ public:
             light.pos = Vec3(0.0, 1.5, 0.0);
             light.radius = 2.5f;
             light.powerCorrection = 2.f;
-            light.type = LightType_Spherical;
+            //light.type = LightType_Spherical;
             light.material = Vec3(1, 1, 1);
             light.isInCamSpace = false;
             // Adding quad mesh
             light.type = LightType_Quad;
-            Square s = *new Square();
-            s.setQuad(light.pos - Vec3(0.5, 0.5, 0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 0.4, 0.4);
-            light.quad = (Mesh)s;
+            Square s;
+            s.setQuad(Vec3(-1.,0,0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(-1* light.pos);
+            //s.translate(Vec3(0.,0.5,0.0));
+            //s.scale(Vec3(2., 2., 1.));
+            s.rotate_x(90);
+            s.build_arrays();
+
+            light.quad = s;
         }
 
+/*{
+    squares.resize(squares.size() + 1);
+            Square &s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1, -1.5, 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(Vec3(0.,1.5,0.0));
+            
+            //s.scale(Vec3(2., 2., 1.));
+            s.rotate_x(90);
+            s.build_arrays();
+}*/
         { // Back Wall
             squares.resize(squares.size() + 1);
             Square &s = squares[squares.size() - 1];
@@ -333,6 +382,8 @@ public:
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
         }
+
+        
 
         { // Left Wall
 
@@ -376,12 +427,12 @@ public:
         { // Ceiling
             squares.resize(squares.size() + 1);
             Square &s = squares[squares.size() - 1];
-            s.setQuad(Vec3(-1., -1.1, 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.setQuad(Vec3(-1., -1, 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             s.translate(Vec3(0., 0., -2.));
             s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
             s.build_arrays();
-            s.material.diffuse_material = Vec3(0.1, 0.1, 1.0);
+            s.material.diffuse_material = Vec3(0.1, 1, 1.0);
             s.material.specular_material = Vec3(1.0, 1.0, 1.0);
             s.material.shininess = 16;
         }

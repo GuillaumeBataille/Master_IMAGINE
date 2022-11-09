@@ -13,6 +13,8 @@ struct RaySphereIntersection
     Vec3 intersection;
     Vec3 secondintersection;
     Vec3 normal;
+    // Adding reflexion pour recursive
+    Vec3 bounce_direction;
 };
 
 static Vec3 SphericalCoordinatesToEuclidean(Vec3 ThetaPhiR)
@@ -122,6 +124,8 @@ public:
             intersection.secondintersection = o + (d * racine2);
             intersection.normal = intersection.intersection - c;
             intersection.normal.normalize();
+            intersection.bounce_direction = d - 2 * intersection.normal * (Vec3::dot(d,intersection.normal)); // Trouvé sur internet pour avoir le rayon reflechi
+            intersection.bounce_direction.normalize();
         }
         else
         {

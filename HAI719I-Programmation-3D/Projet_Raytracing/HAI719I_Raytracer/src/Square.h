@@ -15,6 +15,8 @@ struct RaySquareIntersection
     float u, v;
     Vec3 intersection;
     Vec3 normal;
+    // Adding reflexion pour recursive
+    Vec3 bounce_direction;
 };
 
 double triangleArea(Vec3 A, Vec3 B, Vec3 C)
@@ -90,7 +92,7 @@ public:
 
         Vec3 d = ray.direction();
         Vec3 o = ray.origin();
-        Vec3 n = -1 * normalvec();
+        Vec3 n = normalvec();
         n.normalize();
 
         Vec3 a = bottomLeft();   // D
@@ -109,7 +111,7 @@ public:
         }*/
 
         double t = (D - Vec3::dot(o, n)) / Vec3::dot(d, n); // Fonction de t
-        double orientation = Vec3::dot(d, -1 * n);
+        double orientation = Vec3::dot(d,  n);
         if (t > 0 && orientation <= 0) // On est dans le plan et on est face au plan (pour ne pas render le dos des squares inutilement)
         {
             inter = o + (t * d); // Coordonnée du point d'intersection
@@ -130,10 +132,11 @@ public:
             {
                 intersection.intersectionExists = true;
                 intersection.t = t;
-                intersection.normal = -1 * n;
+                intersection.normal = n;
                 intersection.intersection = inter;
                 intersection.u = APx;
                 intersection.v = APy;
+                intersection.bounce_direction = d - 2 * intersection.normal *( Vec3::dot(d,intersection.normal));
             }
             else
             {
