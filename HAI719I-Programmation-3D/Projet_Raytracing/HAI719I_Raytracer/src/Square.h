@@ -90,7 +90,8 @@ public:
 
         Vec3 d = ray.direction();
         Vec3 o = ray.origin();
-        Vec3 n = normalvec();
+        Vec3 n = -1 * normalvec();
+        n.normalize();
 
         Vec3 a = bottomLeft();   // D
         Vec3 a1 = bottomRight(); // C
@@ -101,15 +102,15 @@ public:
 
         double D = a.dot(a, n);
 
-        if (Vec3::dot(n, d) <= EPSILON_up && Vec3::dot(n, d) >= -EPSILON_down)
+        /* if (Vec3::dot(n, d) <= EPSILON_up && Vec3::dot(n, d) >= -EPSILON_down)
         {
             intersection.intersectionExists = false;
             return intersection;
-        }
+        }*/
 
-        double t = (D - o.dot(o, n)) / Vec3::dot(d, n); // Fonction de t
-
-        if (t > 0) // On est dans le plan
+        double t = (D - Vec3::dot(o, n)) / Vec3::dot(d, n); // Fonction de t
+        double orientation = Vec3::dot(d, n);
+        if (t > 0) // On est dans le plan et on est face au plan
         {
             inter = o + (t * d); // Coordonnée du point d'intersection
             // Changement de repère : on se mets dans le repère du square
@@ -120,19 +121,19 @@ public:
             // Le vecteur entre le 0,0,0 du carré et le point intersection
             Vec3 AP = inter - a;
             // Les normes de projection du point intersection sur l'axe X et Y
-            double APx = Vec3::dot(ABx, AP) / ABx.length();
-            double APy = Vec3::dot(ABy, AP) / ABy.length();
-            double ABx_length = ABx.length();
-            double ABy_length = ABy.length();
+            double APx = Vec3::dot(ABx, AP) / ABx.norm();
+            double APy = Vec3::dot(ABy, AP) / ABy.norm();
+            double ABx_norm = ABx.norm();
+            double ABy_norm = ABy.norm();
             // Si la norme Proj x < norme ABx alors on est dans le carré en X (cf en y)
-            if (APx <= ABx.length() && APx > 0 && APy <= ABy.length() && APy > 0)
+            if (APx <= ABx.norm() && APx > 0 && APy <= ABy.norm() && APy > 0)
             {
                 intersection.intersectionExists = true;
                 intersection.t = t;
-                intersection.normal = n;
+                intersection.normal = -1 * n;
                 intersection.intersection = inter;
-                intersection.u = getumin();
-                intersection.v = getvmin();
+                intersection.u = APx;
+                intersection.v = APy;
             }
             else
             {

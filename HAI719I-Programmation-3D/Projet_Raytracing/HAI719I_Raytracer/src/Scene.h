@@ -43,13 +43,12 @@ struct RaySceneIntersection
     unsigned int typeOfIntersectedObject;
     unsigned int objectIndex;
     float t;
-    Vec3 normal; // ajout normal
-    Vec3 position;// ajout position
+    Vec3 normal;   // ajout normal
+    Vec3 position; // ajout position
     RayTriangleIntersection rayMeshIntersection;
     RaySphereIntersection raySphereIntersection;
     RaySquareIntersection raySquareIntersection;
     RaySceneIntersection() : intersectionExists(false), t(FLT_MAX) {}
-
 };
 
 class Scene
@@ -84,22 +83,21 @@ public:
         }
     }
 
-
-    Material getRayMaterial(RaySceneIntersection RSI){
-            switch (RSI.typeOfIntersectedObject)
-            {
-            case 0:
-                return spheres[RSI.objectIndex].material;
-                break;
-            case 1:
-                return squares[RSI.objectIndex].material;
-                break;        
-            default:
-                return Material();
-                break;
-            }
+    Material getRayMaterial(RaySceneIntersection RSI)
+    {
+        switch (RSI.typeOfIntersectedObject)
+        {
+        case 0:
+            return spheres[RSI.objectIndex].material;
+            break;
+        case 1:
+            return squares[RSI.objectIndex].material;
+            break;
+        default:
+            return Material();
+            break;
+        }
     }
-
 
     RaySceneIntersection computeIntersection(Ray const &ray, double znear)
     {
@@ -120,7 +118,7 @@ public:
                     result.typeOfIntersectedObject = 0;       // On set a 0 le type d'objet rencontré (avec 0 pour sphère et 1 pour square )
                     result.t = raysphere.t;                   // On recup son t, distance entre la caméra et le point d'intersection.
                     result.raySphereIntersection = raysphere; // On récupère l'intersection
-                    result.normal = raysphere.normal; // On recupère la normale
+                    result.normal = raysphere.normal;         // On recupère la normale
                     result.position = raysphere.intersection; // On recupère la position de l'intersection
                 }
             }
@@ -139,7 +137,7 @@ public:
                     result.typeOfIntersectedObject = 1;       // On set a 1 le type d'objet rencontré (avec 0 pour sphère et 1 pour square )
                     result.t = raysquare.t;                   // On recup son t, distance entre la caméra et le point d'intersection.
                     result.raySquareIntersection = raysquare; // On récupère l'intersection
-                    result.normal = raysquare.normal; // On récupère la normale
+                    result.normal = raysquare.normal;         // On récupère la normale
                     result.position = raysquare.intersection; // On recupère la position de l'intersection
                 }
             }
@@ -147,37 +145,29 @@ public:
         return result;
     }
 
-        void phongCompute(RaySceneIntersection RSI, Vec3 &color, Material mat){
-            for(unsigned long int i=0;i<lights.size();i++){
-                Vec3 L = lights[i].pos-RSI.position;
-                double dis = L.length();
-                L.normalize();
-                Ray shadowLegend = Ray(RSI.position,L);
-                double shadowBias = 0;
-                if(lights[i].type==LightType_Quad){
-                    Vec3 bottom_left=lights[i].quad.vertices[0].position;
-                    Vec3 right =lights[i].quad.vertices[1].position-bottom_left;
-                    Vec3 up = lights[i].quad.vertices[3].position-bottom_left;
-                    Vec3 v = (double(rand())/RAND_MAX*right+double(rand())/RAND_MAX*up+bottom_left)-RSI.position;
-                    v.normalize();
-                    for( unsigned long int j=0;j<LIGHTRES;j++){
-                        shadowLegend = Ray(RSI.position, v);
-                        shadowBias += computeIntersection(shadowLegend, LAMBDADIS).t>=dis;
-                    }
-                    shadowBias/=LIGHTRES;
-                }
-                else {
-                    shadowBias = computeIntersection(shadowLegend, LAMBDADIS).t>=dis;
-                }
+    void phong(RaySceneIntersection RSI, Vec3 &color, Material mat)
+    {
+        for (unsigned long int i = 0; i < lights.size(); i++)
+        {
+            Vec3 L = lights[i].pos - RSI.position; // Le vecteur depuis le point d'intersection vers la lumière courante
+            double range = L.length();             // L'intensité de L / la distance entre la position et la lumière
+            L.normalize();
 
-                    double lightvalue = Vec3::dot(L,RSI.normal);
+            double lightvalue = 0;                     // La vvalue de dot n L
+            if (Vec3::dot(L, RSI.normal) > 0)          // Si on a bien un positif en dot product de n et L
+                lightvalue = Vec3::dot(L, RSI.normal); // On le recup
+            Vec3 diffuse = Vec3(mat.diffuse_material[0] * lights[i].material[0] * lightvalue, mat.diffuse_material[1] * lights[i].material[1] * lightvalue, mat.diffuse_material[2] * lights[i].material[2] * lightvalue);
+            Vec3 specular = mat.specular_material * pow(lightvalue, fmax(mat.shininess, 0.0));
 
-                    Vec3 j =  Vec3(mat.diffuse_material[0]*lights[i].material[0] ,mat.diffuse_material[1]*lights[i].material[1],mat.diffuse_material[2]*lights[i].material[2]);
-                    Vec3 z = Vec3(lights[i].material[0],lights[i].material[1],lights[i].material[2]);
-                    color +=  shadowBias * (fmax(DIFFUSEREF,0.0)*lightvalue) * j  + fmax(SPECREF,0.0)*mat.specular_material*pow(lightvalue,fmax(mat.shininess,0.0)) ;
- 
-                
+            double shadowvalue = 0;                            // Valeur de l'ombre (O si obstacle et 1 sinon)
+            Ray light = Ray(RSI.position, L);                  // origine la position de l'intersect et direction la light
+            if (computeIntersection(light, 0.0001).t >= range) // Si j'atteinds la lumière
+            {
+                shadowvalue = 1; // Le 0.001 sur le znear me sert a ne pas considérer comme obstacle un vertice voisin ou moi même
             }
+
+            color += shadowvalue * (diffuse + specular);
+        }
     }
 
     Vec3 rayTraceRecursive(Ray ray, int NRemainingBounces, double znear)
@@ -186,15 +176,14 @@ public:
         // TODO appeler la fonction recursive
         Vec3 color;
         RaySceneIntersection RSI = computeIntersection(ray, znear);
-        //      std::cout <<"Sphere t : "<< RSI.raySphereIntersection.t <<"   Square t :" <<RSI.raySquareIntersection.t<<std::endl;;
-        if (!RSI.intersectionExists) return Vec3(0,0,0);
+        if (!RSI.intersectionExists)
+            return Vec3(0, 0, 0);
+
         Material mat = getRayMaterial(RSI);
-            color = mat.ambient_material; // Récup couleur ambiant
-               // phongCompute(RSI,color,mat);
-                //std::cout<<"color : " << color << std::endl;
-        if (NRemainingBounces==0) {
-            return color;
-        }
+        color = mat.ambient_material; // Récup couleur ambiant
+        phong(RSI, color, mat);
+        //std::cout << "color : " << color << std::endl;
+        return color;
     }
 
     Vec3 rayTrace(Ray const &rayStart, double znear)
@@ -247,18 +236,6 @@ public:
             s.material.specular_material = Vec3(0.2, 0.2, 0.2);
             s.material.shininess = 20;
 
-            meshes.resize(meshes.size() + 1);
-            meshes[meshes.size() - 1] = s;
-        }
-
-        {
-            squares.resize(squares.size() + 1);
-            Square &s = squares[squares.size() - 1];
-            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
-            s.build_arrays();
-            s.material.diffuse_material = Vec3(0., 0., 1.);
-            s.material.specular_material = Vec3(0.8, 0.8, 0.8);
-            s.material.shininess = 20;
             meshes.resize(meshes.size() + 1);
             meshes[meshes.size() - 1] = s;
         }
@@ -318,7 +295,7 @@ public:
             s.scale(Vec3(2., 2., 1.));
             s.translate(Vec3(0., 0., -2.));
             s.build_arrays();
-            s.material.diffuse_material = Vec3(1., 1., 1.);
+            s.material.diffuse_material = Vec3(1., 0., 0.7);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
         }
@@ -358,7 +335,7 @@ public:
             s.scale(Vec3(2., 2., 1.));
             s.rotate_x(-90);
             s.build_arrays();
-            s.material.diffuse_material = Vec3(0.3, 0.0, 0.5);
+            s.material.diffuse_material = Vec3(0.3, 0.43, 0.5);
             s.material.specular_material = Vec3(0.0, 1.0, 0.0); // old value
             s.material.shininess = 16;
         }
@@ -371,7 +348,7 @@ public:
             s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
             s.build_arrays();
-            s.material.diffuse_material = Vec3(0.0, 0.0, 1.0);
+            s.material.diffuse_material = Vec3(0.1, 0.1, 1.0);
             s.material.specular_material = Vec3(0.0, 1.0, 0.0); // old value Vec3(1.0, 1.0, 1.0);
             s.material.shininess = 16;
         }
@@ -411,7 +388,7 @@ public:
             s.m_radius = 0.75f;
             s.build_arrays();
             s.material.type = Material_Glass;
-            s.material.diffuse_material = Vec3(0., 0., 0.);
+            s.material.diffuse_material = Vec3(0.4, 0.1, 0.);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
             s.material.transparency = 0.;
