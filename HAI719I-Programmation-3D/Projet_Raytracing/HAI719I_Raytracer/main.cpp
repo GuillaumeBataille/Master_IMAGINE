@@ -192,13 +192,16 @@ void ray_trace_from_camera()
                 float v = ((float)(y) + (float)(rand()) / (float)(RAND_MAX)) / h;
                 // this is a random uv that belongs to the pixel xy.
                 screen_space_to_world_space_ray(u, v, pos, dir);
+                //Vec3 color = scenes[selected_scene].rayTrace(Ray(pos, dir), znear);
                 Vec3 color = scenes[selected_scene].rayTraceRecursive(Ray(pos, dir), 0, znear);
                 image[x + y * w] += color;
             }
+
+            image[x + y * w] /= nsamples;
         }
     }
     std::cout << "\tDone" << std::endl;
-    /* // DEBUG ///////////////////////////
+    /* // DEBUG ///////////////////////////computeIntersection(light, 0.0001).t
        float u = 0.5;
              float  v = 0.5;
                  screen_space_to_world_space_ray(u,v,pos,dir);
