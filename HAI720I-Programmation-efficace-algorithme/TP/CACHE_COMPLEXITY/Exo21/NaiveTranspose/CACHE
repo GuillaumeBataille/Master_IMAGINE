@@ -1,0 +1,7 @@
+
+32Ko = 32768 octets
+
+= 4096 doubles
+
+Cela nous donne n =  sqrt(4096/2) = 45
+

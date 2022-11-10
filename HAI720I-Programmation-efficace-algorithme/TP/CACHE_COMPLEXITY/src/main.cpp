@@ -7,52 +7,11 @@
 #include <string.h>
 #include "Eval-perf.h"
 #include "exo16.h"
+#include "exo21.h"
+#include "exo22.h"
 
 int main()
 {
 
-    int N;
-    size_t t, n;
 
-    std::vector<size_t> k{1, 7, 16};
-
-    // Valeurs initiales
-
-    std::vector<float> A, v, temp, y;
-
-    N = 4 * n * n - 2 * n;
-
-    EvalPerf PE;
-
-    for (t = 1; t < 13; t++)
-    {
-        for (size_t i = 0; i < 3; i++)
-        {
-            n = pow(2, t);
-
-            A.resize(n * n, 2.);
-            v.resize(n, 5);
-            temp.resize(n, 0.);
-            y.resize(n, 0.);
-
-            //Classic
-            PE.start();
-            mat2vec(n, A, v, y, temp, k[i]);
-            PE.stop();
-
-            std::string s = "AxAxv/T =";
-            s += std::to_string(t) + "  K= " + std::to_string(k[i]);
-            PE.compute(mat2vec_flop(n), s.c_str());
-
-            //Transpose
-            PE.start();
-            mat2vec_t(n, A, v, y, temp, k[i]);
-            PE.stop();
-
-            s = "AxAtxv/T =";
-            s += std::to_string(t) + "  K= " + std::to_string(k[i]);
-            PE.compute(mat2vec_flop(n), s.c_str());
-        }
-    }
-    PE.print(N);
 }

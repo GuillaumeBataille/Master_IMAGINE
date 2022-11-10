@@ -1,0 +1,125 @@
+1 - Si on suppose que : 
+-A et B rentre dans le cache
+-n est multiple de B 
+- B et A aligné en mémoire
+- On est en cache aware
+ Alors on a deux matrices qui ne vont provoquer que des cold miss lors de l'import des données
+ Et cache cold miss va bring B mots.
+ MT(n)= (2*n^2)/B si 2n^2 < M (si y'a assez de place dans le cache)
+Soit MT(n) = O(n^2/B)
+
+ 2 - Si on suppose que :
+ - n est pas multiple de B
+ - B et A non aligné
+ - On est en cache oblivious
+ - n ne rentre pas dans le cache
+Alors on va avoir des cache misses classique en plus des cold miss
+MT(n) = 2*n^2 si 1<=M<=2 --- pire cas (mais un cache aussi petit n'existe pas)
+
+3 - On a :
+M >= (n+1)B qui peut s'écrire M/B >= n+1 
+ça sa veut dire que le cache a au minimum n+1 lignes
+C'est effectivement fesable avec un cache de n+1 lignes d'avoir une complexité O(n^2/B) avec une politique de remplacement Most frequently used
+
+n lignes de cache pour ecrire dans les colonnes de B
+1 lignes pour parcourir A et ecrire les elements contenu dans cette ligne dans les n lignes de BS
+
+4 -  NaiveTranspose
+void fillMatrix(size_t n, std::vector<double> &A){
+   for (size_t i = 0; i < n; ++i) { // row
+        for (size_t j = 0; j < n; ++j) { // column
+        A[i * n + j]=rand() % 100;
+        }
+    }
+}
+void printMatrix(size_t n, std::vector<double> &A){
+    std::cout<<"Matrice : "<<std::endl;
+   for (size_t i = 0; i < n; ++i) { // row
+        for (size_t j = 0; j < n; ++j) { // column
+        std::cout<< " " << A[i*n+j];
+        if(j == n-1) std::cout<<std::endl<<std::endl;
+        }
+    }
+}
+void NaiveTranspose(size_t n, std::vector<double> &A,  std::vector<double> &B)
+{
+   for (size_t i = 0; i < n; ++i) { // row
+      for (size_t j = 0; j < n; ++j) { // column
+         B[j * n + i] = A[i * n + j]; // Transposing
+        }
+    }
+}
+
+Pour le cache j'ai trouvé n = 45 pour mon cache de taille 32ko.
+Cela permet de faire rentrer dans 32ko deux matrices de taille n*n
+
+5- Blocking Transpose
+void BlockingTranspose(size_t n, std::vector<double> &A,  std::vector<double> &B, size_t blocksize)
+{
+for (size_t i = 0; i < n; i += blocksize) { //row
+    for (size_t j = 0; j < n; j += blocksize) { // column
+        // transpose the block beginning at [i,j]
+
+        for (size_t k = i; k < i + blocksize; ++k) {// rowblock
+            for (size_t l = j; l < j + blocksize; ++l) {//columnbloc
+                B[k + l*n] = A[l + k*n];
+            }
+        }
+    }
+}
+}
+Le blocking donne de la localité au transpose
+Imaginons une matrice 100 par 100
+On est en train de transpose fin de la premiere ligne
+Il va falloir chercher la fin de la premiere colonne en B (donc pas du tout dans la même localité spatiale) pour savoir la ou tu va la mettre
+Ici ça reste proche
+
+
+6-Cache Oblivious Transpose
+  void print_submatrix1(const double * M, size_t m, size_t n, size_t s){
+
+        for (size_t i = 0; i < m; i++)
+        {
+           for (size_t j = 0; j < n; j++)
+           {
+            std::cout<<M[i*s+j]<<" ";
+           }
+           std::cout<<std::endl;
+           
+        }
+        
+    }
+
+
+void swap(double&a,double &b){
+    double temp = a;
+    a = b;
+    b = temp;
+
+}
+
+// Pas reussi avec a et b, je m'embrouille dans la gestion de m et n
+void CacheObl_Transpose(double *a, int n, int N) {
+    //Regner
+    if (n <= 4) { // si on a 2*2
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < i; j++)
+                swap(a[i * N + j], a[j * N + i]);
+    } else {
+        //Diviser
+        int k = n / 2;
+
+        CacheObl_Transpose(a, k, N);
+        CacheObl_Transpose(a + k, k, N);
+        CacheObl_Transpose(a + k * N, k, N);
+        CacheObl_Transpose(a + k * N + k, k, N);
+        //Propager/Reconstuire
+        for (int i = 0; i < k; i++)
+            for (int j = 0; j < k; j++)
+                swap(a[i * N + (j + k)], a[(i + k) * N + j]);
+    }
+}
+
+Ici, un algo diviser pour regner ou on split une matrice en 4, jusqu'a arriver a un cas simple : mat de taille 2*2
+Puis on reigne sur ces petites matrices (tout rentre dans le cache a priori car 2*4 doubles rentre forcément) donc on peut faire de la réutilisation dans le cache
+Enfin, lorsqu'on a fini notre travail on expand/propage le nouveau resultat en reconstruisant la matrice originale

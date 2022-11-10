@@ -397,6 +397,7 @@ public:
             s.material.diffuse_material = Vec3(1., 0., 0.);
             s.material.specular_material = Vec3(1., 0., 0.);
             s.material.shininess = 16;
+            
         }
 
         { // Right Wall

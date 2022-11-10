@@ -2,7 +2,7 @@
 #include <chrono>
 #include <x86intrin.h>
 #include <string.h>
-
+#include <stdio.h>
 EvalPerf::EvalPerf() {}
 
 uint64_t EvalPerf::rdtsc()
