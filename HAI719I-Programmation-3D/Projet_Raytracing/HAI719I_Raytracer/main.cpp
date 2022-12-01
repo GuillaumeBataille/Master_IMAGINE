@@ -38,8 +38,9 @@ using namespace std;
 // -------------------------------------------
 // OpenGL/GLUT application code.
 // -------------------------------------------
-#define NBSAMPLE 10
-#define NBBOUNCE 1
+//Variable globale
+#define NBSAMPLE 50
+#define NBBOUNCE 3
 #define ZNEAR 0
 static GLint window;
 static unsigned int SCREENWIDTH = 480;
@@ -51,7 +52,6 @@ static bool mouseZoomPressed = false;
 static int lastX = 0, lastY = 0, lastZoom = 0;
 static unsigned int FPS = 0;
 static bool fullScreen = false;
-
 
 std::vector<Scene> scenes;
 unsigned int selected_scene;
@@ -195,7 +195,7 @@ void ray_trace_from_camera()
                 // this is a random uv that belongs to the pixel xy.
                 screen_space_to_world_space_ray(u, v, pos, dir);
                 //Vec3 color = scenes[selected_scene].rayTrace(Ray(pos, dir), znear);
-                Vec3 color = scenes[selected_scene].rayTraceRecursive(Ray(pos, dir), NBBOUNCE,ZNEAR);
+                Vec3 color = scenes[selected_scene].rayTraceRecursive(Ray(pos, dir), NBBOUNCE, ZNEAR);
                 image[x + y * w] += color;
             }
 
