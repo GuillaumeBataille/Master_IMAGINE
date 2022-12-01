@@ -38,8 +38,8 @@ using namespace std;
 // -------------------------------------------
 // OpenGL/GLUT application code.
 // -------------------------------------------
-#define NBSAMPLE 50
-#define NBBOUNCE 0
+#define NBSAMPLE 10
+#define NBBOUNCE 1
 #define ZNEAR 0
 static GLint window;
 static unsigned int SCREENWIDTH = 480;

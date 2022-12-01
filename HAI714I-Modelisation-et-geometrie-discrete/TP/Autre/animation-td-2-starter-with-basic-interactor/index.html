@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/webgl.css">
+    <script type="text/javascript" src="js/Coord2D.js"></script>
+    <script type="text/javascript" src="js/Colors.js"></script>
+    <script type="text/javascript" src="js/Squelette.js"></script>
+    <script type="text/javascript" src="js/Displayer.js"></script>
+    <script type="text/javascript" src="js/Animation.js"></script>
+</head>
+<body>
+    
+    <div id="display"></div>
+    <p>Remarques à propos de cette version:</p>
+    <p>
+        Un squelette est représenté par un graphe orienté
+        <ul>
+            <li>
+                dont les sommets représentent les articulations (joint), caractérisées par
+                <ul>
+                    <li> leurs positions (Coord2D) dans le modèle et leurs positions dans le dispositif d'affichage, et </li>
+                    <li> l'identifiant de l'élément (cet identifiant est créé lors de l'initialisation du graphe).</li>
+                </ul>
+            </li>
+            <li>les arêtes orientées (sens fk) représentent les os (bones) et sont caractérisées par</li>
+            <ul>
+                <li>une référence from </li>
+                <li>une référence to </li>
+                <li>alpha =  l'angle (<b>i</b>, <b>fromto</b>) où <b>i</b> est le premier vecteur du repère canonique du plan et <b>fromto</b> est le vecteur des points <code>from</code> &agrave; <code>to</code>
+                </li>
+            </ul>
+            <li>Remarque: le lien entre alpha et (from, to) est bidirectionnel pour ce qui est des coordonnées des dispositifs de pointage et d'affichage, 
+                mais pour cette version, il est unidirectionnel ((from,to) -> alpha) pour ce qui est des coordonnées du modèle.
+            </ul>
+
+    </p>
+
+
+
+    <p>Affichage et Animation par propagation fk, ik, et mixte</p>
+    <p>Le premier affichage crée le ghost qui peut ensuite être édité et/ou animé par propagation des déplacements/modification des orientations.</p>
+
+    <p>
+        La sélection d'un élément se fait par la fonction pick qui retourne <ul><li>l'élément de chaîne qui se trouve sous le pointeur lorsqu'il existe</li><li>undefined dans les autres cas.</li></ul>
+    </p>
+    <p>La fonction pick n'a aucun effet de bord. </p>
+
+
+    <script type="text/javascript">
+        let displayer;
+        let squelette = undefined;
+
+
+        function initComputeAndRender() {
+            let display = document.getElementById("display");
+            displayer = new Displayer(display);
+            squelette = new Squelette("p");
+            let dimension = squelette.getModelBox();
+            //setModelSpace(minX, minY, maxX, maxY)
+            displayer.setModelSpace(dimension.minX, dimension.minY, dimension.maxX, dimension.maxY);
+            
+            let interactor = new Interactor(squelette, displayer);
+            
+            squelette.draw(displayer);
+        }
+
+        window.onload = initComputeAndRender;
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/webgl.css">
+    <script type="text/javascript" src="js/Coord2D.js"></script>
+    <script type="text/javascript" src="js/Colors.js"></script>
+    <script type="text/javascript" src="js/Squelette.js"></script>
+    <script type="text/javascript" src="js/Displayer.js"></script>
+    <script type="text/javascript" src="js/Animation.js"></script>
+    <script type="text/javascript" src="js/Sequences.js"></script>
+</head>
+<body>
+    <div id="display"></div>
+    <div id="msgArea">
+
+        <p>&Agrave; propos de cette version</p>
+        <p>
+            Un squelette est représenté par un graphe orienté
+            <ul>
+                <li>
+                    dont les sommets représentent les articulations (joint), caractérisées par
+                    <ul>
+                        <li> position (Coord2D) dans le modèle</li>
+                        <li> position dans le dispositif d'affichage, et </li>
+                        <li> l'identifiant de l'élément (créé lors de l'initialisation du graphe et utilisé dans la définition d'animations).</li>
+                    </ul>
+                </li>
+                <li>les arêtes orientées (sens fk) représentent les os (bones) et sont caractérisées par</li>
+                <ul>
+                    <li>une référence from (première articulation)</li>
+                    <li>une référence to (deuxième articulation)</li>
+                    <li>
+                        alpha =  l'angle (<b>i</b>, <b>fromto</b>) où <b>i</b> est le premier vecteur du repère canonique du plan et <b>fromto</b> est le vecteur des points <code>from</code> &agrave; <code>to</code>
+                    </li>
+                </ul>
+            </ul>
+        </p>
+        <p>
+            Remarques diverses:
+            <ul>
+                <li>
+                    Contrairement à d'autres logiques usuelles, chaque sommet est représenté dans deux systèmes de coordonnées différents:
+                    le système de coordonnées du modèle et le système de coordonnées des dispositifs. Le squelette est initialisé avec
+                    les coordonnées modèle. Au premier affichage les coordonnées dans le système de coordonnées des dispositifs sont calculées et sauvegardées.
+                    Les interactions modifient ensuite directement ces coordonnées (mais pas leurs homologues modèles).
+                </li>
+                <li>
+                    Le lien entre les attributs (alpha, ro) et les deux versions modèle et dispositif de (from,to) est bidirectionnel par nature mais pour simplifier, dans cette version, (alpha, ro)
+                    ne sont utilisées que dans les interactions/affichage.
+                    (alpha, ro) ne sont donc exprimées que dans les systèmes de coordonnées des dispositifs de pointage et d'affichage.
+                </li>
+                <li>A propos de la propagation des mouvements: pour alléger le modèle, seuls les liens fk sont explicites. Mais, au besoin, fk et ik sans représentables sans trop de modifications.</li>
+                <li>L'interacteur est à écrire mais les gestionnaires d'évènements utiles pour l'écrire sont déjà écrits et configurés pour faciliter son écriture. </li>
+                <li>Pour l'interacteur, une fonction pick est déjà écrite. Elle retourne <ul><li>le sommet du modèle qui se trouve sous le pointeur lorsqu'il existe</li><li>undefined dans les autres cas.</li></ul></li>
+                <li>Dans cette version, la fonction pick n'a aucun effet de bord. </li>
+            </ul>
+    </div>
+
+    <script type="text/javascript">
+        let displayer;
+        let arti = undefined;
+
+
+        function initComputeAndRender() {
+            let display = document.getElementById("display");
+            displayer = new Displayer(display);
+            arti = new Squelette("p");
+            let dimension = arti.getModelBox();
+            displayer.setModelSpace(dimension.minX, dimension.minY, dimension.maxX, dimension.maxY);
+            let msgArea = document.getElementById("msgArea");
+            
+            
+            let dragged= null;
+            let voisinage_to = [];
+            let voisinage_dist = [];
+            let voisinage_from = [];
+            let voisinage_rotate = [];
+            let newInt = Interactor;
+            let type = 2;
+
+            newInt.prototype.handlePress=function(e){
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                for(let current_joint of arti.joints){
+                    r= displayer.pointSize+displayer.epsilon;
+                    let xy = current_joint.p.c;
+                    if(e.offsetX <= xy.x + r && e.offsetX >= xy.x - r && e.offsetY <= xy.y + r && e.offsetY >= xy.y - r){
+                        dragged=current_joint;
+                        dragged.selected=true;
+                    }   
+                }
+                if(dragged!=null){
+
+                        //search all voisinage_
+                            let marked=[]; //Liste de marqué
+                            let list=[[dragged]];
+                            let local_voisinage_to =[];
+                            let local_voisinage_dist=[];
+                            let local_voisinage_from=[];
+                            let local_voisinage_rotate=[];
+                            let direction = false; //TODO à config au clavier
+                            //let distance = 8; //TODO de meme
+
+                            while(list.length>0){ // Tant qu'il y a des éléments a traiter dans list
+                                current=list[0].shift(); // Retrait du courant
+                                if(marked.filter((x)=> x==current.idj  ).length==0){ // Si le courant est pas encore marqué
+                                    marked.push(current.idj);// On le marque
+                                    for(let current_bone of arti.bones){ // Pour chaque os
+                                        if(current_bone.from.idj==current.idj){ // Si l'os a pour parent from le joint courant
+                                            if(list.length<2)list.push([]); // Si list ne contient que dragged on y ajoute un talbeua vide
+                                            let to = current_bone.to; // On choppe le to de l'os courant
+                                            list[1].push(to); // On mets to dans la case vide du tableau
+                                            local_voisinage_to.push(to); // On ajoute to dans les local_voisinage_ghbourg
+                                            local_voisinage_dist.push(Math.sqrt(
+                                                Math.pow(to.p.c.x-current.p.c.x,2)+
+                                                Math.pow(to.p.c.y-current.p.c.y,2))) // On ajoute dans local_voisinage_dist la distance entre to et le current_joint (from)
+                                            local_voisinage_from.push(current); // On ajoute le joint courant from dans local_voisinage_from 
+
+                                            local_voisinage_to[local_voisinage_to.length-1].selected=true; // On eclaire celui que l'on vient de traiter (le to associé au from currently selected)
+                                        }
+                                    }
+
+                                }
+                                if(list[0].length==0){  // Si on est dans le cas final ou notre liste dragged est vide
+                                    list.shift(); // Erase le contenu de list
+                                    voisinage_to.push(local_voisinage_to);// Ajout de son voisinage (les to)
+                                    voisinage_dist.push(local_voisinage_dist); // Ajout de son voisinage disntace
+                                    voisinage_from.push(local_voisinage_from); // Ajout de son voisinalge (les from)
+
+                                    local_voisinage_to=[];
+                                    local_voisinage_from=[];
+                                    local_voisinage_dist=[];
+                                }
+                            } // Fin WHILE
+
+                    arti.draw(displayer);
+                }
+            };
+
+            newInt.prototype.handleUpLeave= function(e){
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if(dragged!=null){ // Si on tient quelque chose
+                dragged.selected=false; // On deselect ce qu'on tient
+                dragged=null; // On clear la main
+                for(let i=0;i<voisinage_to.length;i++){
+                    for(let j=0; j<voisinage_to[i].length;j++){
+                    voisinage_to[i][j].selected=false; // On deselect tout les voisins
+                    }
+                }
+                // On nettoie tout le voisinage
+                voisinage_to=[];
+                voisinage_dist=[];
+                voisinage_from=[];
+
+                arti.draw(displayer);
+            }
+            
+            
+            }
+
+            newInt.prototype.handleMove= function(e){
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            if(dragged!=null){
+
+
+
+                 // CAS 3 FLUIDIFIER LA PROPAGATION
+                dragged.p.c = new Coord2D(e.offsetX,e.offsetY);
+                    for(let i=0;i<voisinage_to.length;i++){
+                        for(let j=0; j<voisinage_to[i].length;j++){
+                            let ratio = voisinage_dist[i][j]/Math.sqrt(
+                                Math.pow(voisinage_to[i][j].p.c.x-voisinage_from[i][j].p.c.x,2)+
+                                Math.pow(voisinage_to[i][j].p.c.y-voisinage_from[i][j].p.c.y,2)); // On choppe le ration entre l'ancienne distance et la nouvelle 
+
+                            let vec_fromto_new = new Coord2D(  voisinage_to[i][j].p.c.x-voisinage_from[i][j].p.c.x, // On recupère le vec_fromto_newteur courant vec_fromto_new_fromto_new de l'os courant
+                                                    voisinage_to[i][j].p.c.y-voisinage_from[i][j].p.c.y);
+
+                            voisinage_to[i][j].p.c =new Coord2D(   voisinage_from[i][j].p.c.x+vec_fromto_new.x*ratio, 
+                                                                voisinage_from[i][j].p.c.y+vec_fromto_new.y*ratio); // On défini to, le voisinage direct de from comme sa valeur précédente + vec_fromto_new * ratio pour qu'il conserve sa norme
+                        }
+                    }
+
+
+                arti.draw(displayer);
+                }
+            }
+            /////////////
+
+
+            let interactor = new newInt(arti, displayer, msgArea);
+            arti.draw(displayer);
+
+        }
+
+        window.onload = initComputeAndRender;
+
+    </script>
+</body>
+</html>

@@ -214,14 +214,27 @@ public:
        
     }
 
+Vec3 refract(const Vec3 &I, const Vec3 &N, const float &ior) 
+{ 
+    float NdotI = Vec3::dot(N,I);
+    float cosi;
+    NdotI <= -1  ? cosi = -1 : (NdotI >= 1 ? cosi= 1 : cosi = NdotI); 
+    float etai = 1, etat = ior; 
+    Vec3 n = N; 
+    if (cosi < 0) { cosi = -cosi; } else { std::swap(etai, etat); n= N*-1; } 
+    float eta = etai / etat; 
+    float k = 1 - eta * eta * (1 - cosi * cosi); 
 
+    if (k >= 0 ) return (eta * I + (eta * cosi - sqrtf(k)) * n);
+    else return Vec3(0,0,0);
+} 
 
     Vec3 rayTraceRecursive(Ray ray, int NRemainingBounces, double znear)
     {
 
         // TODO appeler la fonction recursive
         Vec3 color;
-        int cpt_mirror = 0;
+        int nb_current_bounce = 0;
         RaySceneIntersection RSI = computeIntersection(ray, znear);
         if (!RSI.intersectionExists) // Si y'a pas d'intersection
             return Vec3(0, 0, 0);
@@ -229,22 +242,40 @@ public:
         Material mat = getRayMaterial(RSI); // On recupère le material courant
         color = mat.ambient_material; // Récup couleur ambiant
         phong(RSI, color, mat, ray); // On appelle phong pour y ajouter la couleur de l'intersection (diffuse + specular) modulé par l'ombre
-        shadow(RSI,color,mat);
-        //computeSoftShadow(color, RSI, ECHANTILLONAGE_LIGHT);
-        if (NRemainingBounces == 0) { //Si y'a plus de rebond
-            if (mat.type == Material_Mirror)
-            cpt_mirror++;
-            else{
-            return color;
-            }
+        //shadow(RSI,color,mat); // On appelle shadow qui va compute les ompbres dans color
+
+        // Recursive part : 
+        //      Reflection sur mirroir
+        if (mat.type == Material_Mirror && NRemainingBounces > 0) { //On teste si on est avec mirroir ET si il reste des rebonds
+            // Parametrage du nouveau point de depart du rayon 
+            Vec3 new_origin = RSI.position; //La position de l'intersection devient l'origine du rayon
+            Vec3 new_direction = RSI.bounce_direction ; // La direction bounce (reflexion via old direction et normale) devient la direction du rayon
+            Ray Ray_bounce = Ray(new_origin,new_direction);
+            color += rayTraceRecursive(Ray_bounce,NRemainingBounces-1, 0.001)*0.1; // On retire un rayon en décrémentant le nbr de rayon a tirer 
         }
-        // Parametrage du nouveau point de depart du rayon 
-        Vec3 new_origin = RSI.position; //La position de l'intersection devient l'origine du rayon
-        Vec3 new_direction = RSI.bounce_direction ; // La direction bounce (reflexion via old direction et normale) devient la direction du rayon
-        Ray Ray_bounce = Ray(new_origin,new_direction);
+        //      Refraction dans glass
+         if (mat.type == Material_Glass && NRemainingBounces > 0) { //On teste si on est avec mirroir ET si il reste des rebonds
+            // Parametrage du nouveau point de depart du rayon 
+            std::cout << "Hello"<<std::endl;
+            Vec3 N =  RSI.normal;
+            Vec3 V = ray.direction();
+            double n = mat.transparency;
+            double NdotV = Vec3::dot(N,V);
+            double W = (1 - n*n*(1-(NdotV*NdotV)));
+            if( W < 0){
+                return color;
+            }
+            Vec3 T = (n * NdotV - sqrt(1 - n*n*(1-(NdotV*NdotV)))) * N - n * V;
+           // T = refract(V,N,n);
+            Vec3 new_origin_legerement_decal = RSI.position + T *0.01 ; //La position de l'intersection devient l'origine du rayon
+            Ray Ray_Refract = Ray(RSI.position,T);
+            //color += rayTraceRecursive(Ray_Refract,NRemainingBounces-1, 0.001); // On retire un rayon en décrémentant le nbr de rayon a tirer 
+        }
+
+        
+
         //TODO RaySceneIntersection raySceneIntersection = computeIntersection(ray);
-        color += rayTraceRecursive(Ray_bounce,NRemainingBounces-1+cpt_mirror, 0.001); // On retire un rayon en décrémentant le nbr de rayon a tirer 
-        // znear =0.001 c'est pour pas qu'il se cogne sur lui même ou sur son voisin
+        // znear =0.001 c'est pour pas qu'il se cogne sur lui même ou sur son voisin    
         return color;
     }
 
@@ -451,20 +482,20 @@ public:
             s.material.shininess = 16;
         }
 
-        { // GLASS Sphere
+        /*{ // GLASS Sphere
 
             spheres.resize(spheres.size() + 1);
             Sphere &s = spheres[spheres.size() - 1];
             s.m_center = Vec3(1.0, -1.25, 0.5);
             s.m_radius = 0.75f;
             s.build_arrays();
-            s.material.type = Material_Mirror;
+            s.material.type = Material_Glass;
             s.material.diffuse_material = Vec3(1., 0., 0.);
             s.material.specular_material = Vec3(1., 0., 0.);
             s.material.shininess = 16;
             s.material.transparency = 1.0;
             s.material.index_medium = 1.4;
-        }
+        }*/
 
         { // MIRRORED Sphere
             spheres.resize(spheres.size() + 1);
@@ -472,7 +503,7 @@ public:
             s.m_center = Vec3(-1.0, -1.25, -0.5);
             s.m_radius = 0.75f;
             s.build_arrays();
-            s.material.type = Material_Glass;
+            s.material.type = Material_Mirror;
             s.material.diffuse_material = Vec3(0.4, 0.1, 0.);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
