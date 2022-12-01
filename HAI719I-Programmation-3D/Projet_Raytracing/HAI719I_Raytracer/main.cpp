@@ -39,9 +39,9 @@ using namespace std;
 // OpenGL/GLUT application code.
 // -------------------------------------------
 //Variable globale
-#define NBSAMPLE 50
+#define NBSAMPLE 44
 #define NBBOUNCE 3
-#define ZNEAR 0
+#define ZNEAR 5
 static GLint window;
 static unsigned int SCREENWIDTH = 480;
 static unsigned int SCREENHEIGHT = 480;

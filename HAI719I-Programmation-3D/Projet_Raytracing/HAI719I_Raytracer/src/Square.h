@@ -113,6 +113,7 @@ public:
         double t = (D - Vec3::dot(o, n)) / Vec3::dot(d, n); // Fonction de t
         double orientation = Vec3::dot(d,  n);
         if (t > 0 && orientation <= 0) // On est dans le plan et on est face au plan (pour ne pas render le dos des squares inutilement)
+        //if (t>0)
         {
             inter = o + (t * d); // Coordonnée du point d'intersection
             // Changement de repère : on se mets dans le repère du square

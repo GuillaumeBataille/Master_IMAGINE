@@ -287,7 +287,7 @@ public:
             //Ray Ray_Refract = Ray(RSI.position, T);
             //color += rayTraceRecursive(Ray_Refract,NRemainingBounces-1, 0.001); // On retire un rayon en décrémentant le nbr de rayon a tirer
         }*/
-
+        //std::cout<<"square size : "<<squares.size()<<std::endl;
         //TODO RaySceneIntersection raySceneIntersection = computeIntersection(ray);
         // znear =0.001 c'est pour pas qu'il se cogne sur lui même ou sur son voisin
 
@@ -391,31 +391,33 @@ public:
             light.pos = Vec3(0.0, 1.5, 0.0);
             light.radius = 2.5f;
             light.powerCorrection = 2.f;
-            //light.type = LightType_Spherical;
+            
             light.material = Vec3(1, 1, 1);
             light.isInCamSpace = false;
             // Adding quad mesh
             light.type = LightType_Quad;
+            //light.type = LightType_Spherical; 
             Square s;
             s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             s.translate(-1 * light.pos);
             //s.translate(Vec3(0.,0.5,0.0));
             //s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
-            s.build_arrays();
-
+            //s.build_arrays();
             light.quad = s;
         }
 
         /*{
     squares.resize(squares.size() + 1);
             Square &s = squares[squares.size() - 1];
-            s.setQuad(Vec3(-1, -1.5, 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
-            s.translate(Vec3(0.,1.5,0.0));
+            s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             
+            s.translate(-1 * x);
+            //s.translate(Vec3(0.,0.5,0.0));
             //s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
             s.build_arrays();
+
 }*/
         { // Back Wall
 
