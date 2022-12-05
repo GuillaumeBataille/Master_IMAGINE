@@ -110,6 +110,7 @@ public:
         double t = (D - Vec3::dot(o, n)) / Vec3::dot(d, n); // Fonction de t
         double orientation = Vec3::dot(d,  n);
         if (t > 0 && orientation <= 0) // On est dans le plan et on est face au plan (pour ne pas render le dos des triangles inutilement)
+       //if(t > 0)
         {
         // 3) check that the intersection point is inside the triangle:
         // CONVENTION: compute u,v such that p = w0*c0 + w1*c1 + w2*c2, check that 0 <= w0,w1,w2 <= 1
@@ -129,7 +130,8 @@ public:
             Vec3 edge1 = s2 - s1;
             Vec3 vp1 = inter - s1;
             C = Vec3::cross(edge1,vp1);
-            if ((u = Vec3::dot(n,C)) < 0){ // Sort de l'aire
+            u = Vec3::dot(N,C);
+            if (u < 0){ // Sort de l'aire
             intersection.intersectionExists = false;
             return intersection;
             }
@@ -138,13 +140,16 @@ public:
             Vec3 edge2 = s0 - s2;
             Vec3 vp2 = inter - s2;
             C = Vec3::cross(edge2,vp2);
-            if ( (v = Vec3::dot(n,C)) < 0){ // Sort de l'aire
+            v = Vec3::dot(N,C);
+            if ( v < 0){ // Sort de l'aire
             intersection.intersectionExists = false;
             return intersection;
             }
             // ON est bien interect 
             u /= denom;
             v /= denom;
+            //std::cout<<" u :"<< u <<"  v : "<<v<<"  DENOM : " <<denom <<std::endl;
+
                 intersection.intersectionExists = true;
                 intersection.t = t;
                 intersection.w0 = u;
@@ -153,7 +158,7 @@ public:
                 intersection.normal = n;
                 intersection.intersection = inter;
                 intersection.bounce_direction = d - 2 * intersection.normal *( Vec3::dot(d,intersection.normal));
-                intersection.tIndex; //TODO
+                intersection.tIndex;
         }
 
         return intersection;

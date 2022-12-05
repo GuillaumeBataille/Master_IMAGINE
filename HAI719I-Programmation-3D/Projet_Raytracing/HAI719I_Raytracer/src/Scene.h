@@ -389,7 +389,8 @@ public:
         {
             squares.resize(squares.size() + 1);
             Square &s = squares[squares.size() - 1];
-            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            //s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.setQuad(Vec3(-1., -1., -2), Vec3(1., 0, -2), Vec3(0., 1, -2), 2., 2.);
             s.build_arrays();
             s.material.diffuse_material = Vec3(0., 0., 1.);
             s.material.specular_material = Vec3(0.8, 0.8, 0.8);
@@ -541,7 +542,7 @@ public:
             s.m_radius = 0.75f;
             s.build_arrays();
             s.material.type = Material_Mirror;
-            s.material.diffuse_material = Vec3(0.4, 0.1, 0.);
+            s.material.diffuse_material = Vec3(0.5, 0.25, 0.15);
             s.material.specular_material = Vec3(1., 1., 1.);
             s.material.shininess = 16;
             s.material.transparency = 0.;
@@ -569,7 +570,7 @@ public:
         {
             meshes.resize( meshes.size() + 1 );
             Mesh & m = meshes[meshes.size() - 1];
-            m.loadOFF("./meshes/suzanne.off");
+            m.loadOFF("./meshes/sphere.off");
             m.build_arrays();
             m.recomputeNormals();
             m.material.type = Material_Mirror;
@@ -710,8 +711,6 @@ public:
             m.material.type = Material_Glass;
             m.material.diffuse_material = Vec3(1., 0., 0.);
             m.material.specular_material = Vec3(1., 0., 0.);
-            m.translate(Vec3(1.,-2.,0));
-            m.scale(Vec3(0.5,0.5,0.5));
             m.build_arrays();
             m.recomputeNormals();
             m.material.shininess = 16;

@@ -39,9 +39,9 @@ using namespace std;
 // OpenGL/GLUT application code.
 // -------------------------------------------
 //Variable globale
-#define NBSAMPLE 5
-#define NBBOUNCE 1
-#define ZNEAR 5
+#define NBSAMPLE 1
+#define NBBOUNCE 0
+#define ZNEAR 0
 static GLint window;
 static unsigned int SCREENWIDTH = 480;
 static unsigned int SCREENHEIGHT = 480;
@@ -201,6 +201,7 @@ void ray_trace_from_camera()
 
             image[x + y * w] /= nsamples;
         }
+        std::cout<< y << " / " << h << std::endl;
     }
     std::cout << "\tDone" << std::endl;
     /* // DEBUG ///////////////////////////computeIntersection(light, 0.0001).t
