@@ -41,7 +41,9 @@ using namespace std;
 //Variable globale
 #define NBSAMPLE 1
 #define NBBOUNCE 0
-#define ZNEAR 0
+#define ZNEAR 5
+#define CURRENT_SCENE 4
+#define SCENE_NB 5
 static GLint window;
 static unsigned int SCREENWIDTH = 480;
 static unsigned int SCREENHEIGHT = 480;
@@ -363,8 +365,8 @@ int main(int argc, char **argv)
     key('?', 0, 0);
 
     camera.move(0., 0., -3.1);
-    selected_scene = 2;
-    scenes.resize(5);
+    selected_scene = CURRENT_SCENE;
+    scenes.resize(SCENE_NB);
     scenes[0].setup_single_sphere();
     scenes[1].setup_single_square();
     scenes[2].setup_cornell_box();

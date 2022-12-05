@@ -100,7 +100,7 @@ public:
 
         // 1) check that the ray is not parallel to the triangle:
 
-         if ((Vec3::dot(n, d) <= 0.0001) && (Vec3::dot(n, d) >= -0.0001))
+         if ((Vec3::dot(n, d) <= 0.01) && (Vec3::dot(n, d) >= -0.01))
         {
             intersection.intersectionExists = false;
             return intersection;
@@ -109,8 +109,8 @@ public:
         // 2) check that the triangle is "in front of" the ray:
         double t = (D - Vec3::dot(o, n)) / Vec3::dot(d, n); // Fonction de t
         double orientation = Vec3::dot(d,  n);
-        if (t > 0 && orientation <= 0) // On est dans le plan et on est face au plan (pour ne pas render le dos des triangles inutilement)
-       //if(t > 0)
+        //if (t > 0 && orientation <= 0) // On est dans le plan et on est face au plan (pour ne pas render le dos des triangles inutilement)
+       if(t > 0)
         {
         // 3) check that the intersection point is inside the triangle:
         // CONVENTION: compute u,v such that p = w0*c0 + w1*c1 + w2*c2, check that 0 <= w0,w1,w2 <= 1

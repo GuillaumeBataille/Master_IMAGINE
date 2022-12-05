@@ -18,6 +18,7 @@ class Box{
     }
     Box(){}
 
+       /// @brief 
        void buildbox() {
         vertices.resize(8);
         triangles.resize(12);
@@ -31,23 +32,23 @@ class Box{
         vertices[6]=Vec3(BB_max[0]  ,BB_max[1]  ,BB_min[2]  );
         vertices[7]=BB_max;
 
-        triangles[0]=Vec3(0,1,2 );
+        triangles[0]=Vec3(0,1,2 );// Good
         triangles[1]=Vec3(3,2,1 );
 
-        triangles[2]=Vec3(0,4,1 );
+        triangles[2]=Vec3(0,4,1 );// Good
         triangles[3]=Vec3(5,1,4 );
 
-        triangles[4]=Vec3(0,4,2 );
+        triangles[4]=Vec3(0,4,2 );// Good
         triangles[5]=Vec3(6,2,4 );
 
-        triangles[6]=Vec3(7,5,6 );
+        triangles[6]=Vec3(7,5,6 );// Good
         triangles[7]=Vec3(4,6,5 );
 
-        triangles[8]=Vec3(7,3,6 );
-        triangles[9]=Vec3(1,6,3 );
+        triangles[8]=Vec3(7,3,6 );// Good
+        triangles[9]=Vec3(2,6,3 );
 
-        triangles[10]=Vec3(7,3,6 );
-        triangles[11]=Vec3(2,6,3 );
+        triangles[10]=Vec3(7,5,3 );// Good
+        triangles[11]=Vec3(3,1,5 );
     }
 
       RayTriangleIntersection intersect( Ray const & ray) {

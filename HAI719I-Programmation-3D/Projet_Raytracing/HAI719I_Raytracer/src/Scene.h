@@ -10,7 +10,7 @@
 #include <GL/glut.h>
 
 #define ECHANTILLONAGE_LIGHT 20
-
+#define shadowmod 1 // 0 = hard 1 = soft
 enum LightType
 {
     LightType_Spherical,
@@ -98,7 +98,7 @@ public:
         }
     }
 
-    RaySceneIntersection computeIntersection(Ray const &ray, double znear)
+    RaySceneIntersection computeIntersection(Ray const &ray, double znear, bool shadowchecking)
     {
         RaySceneIntersection result;     // L'interesection la plus proche
         RaySphereIntersection raysphere; // Definit mon IntersectionSphere
@@ -146,7 +146,7 @@ public:
 
         for (unsigned int k = 0; k < meshes.size(); k++)
         {                                          // Pour toute les sphères rencontrées;
-            raytriangle = meshes[k].intersect(ray); // On teste l'intersection
+            raytriangle = meshes[k].intersect(ray,false); // On teste l'intersection
             if (raytriangle.intersectionExists)
             { // Si l'intersection a bien lieu
                 if (raytriangle.t < result.t && raytriangle.t != 0 && raytriangle.t > znear)
@@ -201,12 +201,14 @@ public:
             // OMBRES DURES - cas avec type of light spherical / ponctuel
             if (lights[i].type == LightType_Spherical)
             {
-                RaySceneIntersection inter2 = computeIntersection(light, 0.0001);
+
+                RaySceneIntersection inter2 = computeIntersection(light, 0.001,true);
                 if (inter2.t >= range)
                 {
                     shadowvalue = 1; // Le 0.001 sur le znear me sert a ne pas considérer comme obstacle un vertice voisin ou moi même
                     // Pas besoin de shadowvalue car ici l'ombre est nette, soit 0 soit 1;
                 }
+            return color *= shadowvalue;
             }
             else
             {
@@ -226,7 +228,7 @@ public:
                     double rangebis = vec_vers_randpoint.norm();
                     vec_vers_randpoint.normalize();
                     light = Ray(RSI.position, vec_vers_randpoint);
-                    RaySceneIntersection inter3 = computeIntersection(light, 0.0001);
+                    RaySceneIntersection inter3 = computeIntersection(light, 0.0001,true);
                     if (!(inter3.intersectionExists && inter3.t < range && inter3.t > 0.0001))
                     {
                         shadowvalue++;
@@ -270,7 +272,7 @@ public:
         // TODO appeler la fonction recursive
         Vec3 color;
         int nb_current_bounce = 0;
-        RaySceneIntersection RSI = computeIntersection(ray, znear);
+        RaySceneIntersection RSI = computeIntersection(ray, znear,false);
         if (!RSI.intersectionExists) // Si y'a pas d'intersection
             return Vec3(0, 0, 0);
 
@@ -310,7 +312,6 @@ public:
             //color += rayTraceRecursive(Ray_Refract,NRemainingBounces-1, 0.001); // On retire un rayon en décrémentant le nbr de rayon a tirer
         }*/
         //std::cout<<"square size : "<<squares.size()<<std::endl;
-        //TODO RaySceneIntersection raySceneIntersection = computeIntersection(ray);
         // znear =0.001 c'est pour pas qu'il se cogne sur lui même ou sur son voisin
 
         return color;
@@ -321,7 +322,7 @@ public:
         //  std::cout << "call a ray"<<std::endl;
         // TODO appeler la fonction recursive
         Vec3 color;
-        RaySceneIntersection RSI = computeIntersection(rayStart, znear);
+        RaySceneIntersection RSI = computeIntersection(rayStart, znear,false);
         //      std::cout <<"Sphere t : "<< RSI.raySphereIntersection.t <<"   Square t :" <<RSI.raySquareIntersection.t<<std::endl;;
         if (RSI.intersectionExists)
         { // Si il y a bien une intersection avec un objet de la scène
@@ -415,8 +416,11 @@ public:
             light.material = Vec3(1, 1, 1);
             light.isInCamSpace = false;
             // Adding quad mesh
-            light.type = LightType_Quad;
-            //light.type = LightType_Spherical; 
+            if (shadowmod == 0){//Hard
+            light.type = LightType_Spherical; 
+            }
+            else{//Smooth
+                        light.type = LightType_Quad;
             Square s;
             s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             s.translate(-1 * light.pos);
@@ -425,6 +429,8 @@ public:
             s.rotate_x(90);
             //s.build_arrays();
             light.quad = s;
+            }
+
         }
 
         /*{
@@ -598,8 +604,11 @@ public:
             light.material = Vec3(1, 1, 1);
             light.isInCamSpace = false;
             // Adding quad mesh
+            if (shadowmod == 0){//Hard
+            light.type = LightType_Spherical; 
+            }
+            else{//Smooth
             light.type = LightType_Quad;
-            //light.type = LightType_Spherical; 
             Square s;
             s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             s.translate(-1 * light.pos);
@@ -608,6 +617,7 @@ public:
             s.rotate_x(90);
             //s.build_arrays();
             light.quad = s;
+            }
         }
 
         /*{
@@ -703,7 +713,7 @@ public:
             s.material.shininess = 16;
         }
 
-        { // GLASS Sphere
+        { // Mesh
 
             meshes.resize( meshes.size() + 1 );
             Mesh & m = meshes[meshes.size() - 1];
@@ -711,6 +721,11 @@ public:
             m.material.type = Material_Glass;
             m.material.diffuse_material = Vec3(1., 0., 0.);
             m.material.specular_material = Vec3(1., 0., 0.);
+            //m.rotate_x(-45);
+            //m.rotate_y(-30);
+            m.scale(Vec3(0.5,0.5,0.5));
+            m.translate(Vec3(0,-.5,0));
+           //m.translate(Vec3(1,-1.5,0));
             m.build_arrays();
             m.recomputeNormals();
             m.material.shininess = 16;
@@ -718,7 +733,7 @@ public:
             m.material.index_medium = 1.4;
         }
 
-        { // MIRRORED Sphere
+        /*{ // MIRRORED Sphere
             spheres.resize(spheres.size() + 1);
             Sphere &s = spheres[spheres.size() - 1];
             s.m_center = Vec3(-1.0, -1.25, -0.5);
@@ -730,7 +745,7 @@ public:
             s.material.shininess = 16;
             s.material.transparency = 0.;
             s.material.index_medium = 0.;
-        }
+        }*/
     }
 };
 

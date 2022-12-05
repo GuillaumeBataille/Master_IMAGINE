@@ -13,7 +13,7 @@
 
 #include <cfloat>
 
-#define EPSILON 0.001
+#define EPSILON 0.0001
 // -------------------------------------------
 // Basic Mesh class
 // -------------------------------------------
@@ -212,15 +212,17 @@ public:
 
     }
 
-    RayTriangleIntersection intersect( Ray const & ray ) const {
+    RayTriangleIntersection intersect( Ray const & ray, bool shadowchecking ) const {
         RayTriangleIntersection closestIntersection;
         closestIntersection.t = FLT_MAX;
         //RayTriangleIntersection BBox_interesection;
         Box Bounding_box = Box(BB_min,BB_max);
-        if (!Bounding_box.intersect(ray).intersectionExists){
+        //std::cout<<BB_max<<BB_min<<std::end;
+        bool touchingbox = Bounding_box.intersect(ray).intersectionExists;
+        /*if (!touchingbox){
             closestIntersection.intersectionExists = false;
             return closestIntersection;
-        }
+        }*/
         // Note :
         // Creer un objet Triangle pour chaque face
         for(size_t i = 0; i < triangles.size();i++) // Pour tout les triangles de mon mesh
@@ -230,7 +232,10 @@ public:
             MeshVertex s1 = vertices[triangles[i].v[1]];
             MeshVertex s2 = vertices[triangles[i].v[2]];
             //std::cout<<s0<<" "<<s1<<" "<<s2<<std::endl;
-            Triangle current_tri = Triangle(s0.position,s1.position,s2.position);
+            float triangleScaling = 1.000001;
+            //triangleScaling =1;
+            Triangle current_tri = Triangle(s0.position*triangleScaling,s1.position*triangleScaling,s2.position*triangleScaling);
+        
             RayTriangleIntersection current_intersect = current_tri.getIntersection(ray);
             if (current_intersect.intersectionExists && current_intersect.t < closestIntersection.t){ // Si on intersect et qu'on est plus proche que le closest actuel
                 closestIntersection = current_intersect;
