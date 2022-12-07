@@ -576,7 +576,7 @@ public:
         {
             meshes.resize( meshes.size() + 1 );
             Mesh & m = meshes[meshes.size() - 1];
-            m.loadOFF("./meshes/sphere.off");
+            m.loadOFF("./meshes/suzanne.off");
             m.build_arrays();
             m.recomputeNormals();
             m.material.type = Material_Mirror;
@@ -598,9 +598,9 @@ public:
             lights.resize(lights.size() + 1);
             Light &light = lights[lights.size() - 1];
             light.pos = Vec3(0.0, 1.5, 0.0);
-            light.radius = 2.5f;
+           //  light.pos = Vec3(1.0, 1.5, 0.0);
+            light.radius = 1.5f;
             light.powerCorrection = 2.f;
-            
             light.material = Vec3(1, 1, 1);
             light.isInCamSpace = false;
             // Adding quad mesh
@@ -610,12 +610,14 @@ public:
             else{//Smooth
             light.type = LightType_Quad;
             Square s;
-            s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
-            s.translate(-1 * light.pos);
+            //s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            //s.setQuad(Vec3(-1, -1, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1.5, 1.5);
+            s.setQuad(Vec3(-0.5, -0.5, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1, 1);
+            //s.translate(-1 * light.pos);
             //s.translate(Vec3(0.,0.5,0.0));
             //s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
-            //s.build_arrays();
+            s.build_arrays();
             light.quad = s;
             }
         }
@@ -623,9 +625,9 @@ public:
         /*{
     squares.resize(squares.size() + 1);
             Square &s = squares[squares.size() - 1];
-            s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
-            
-            s.translate(-1 * x);
+            s.setQuad(Vec3(-0.5, -0.5, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1, 1);
+            //Vec3 x = Vec3(0.0, 1.5, 0.0);
+            //s.translate(x);
             //s.translate(Vec3(0.,0.5,0.0));
             //s.scale(Vec3(2., 2., 1.));
             s.rotate_x(90);
@@ -681,7 +683,7 @@ public:
             s.scale(Vec3(2., 2., 1.));
             s.rotate_x(-90);
             s.build_arrays();
-            //s.material.type = Material_Mirror;
+            s.material.type = Material_Mirror;
             s.material.diffuse_material = Vec3(0.3, 0.43, 0.5);
             s.material.specular_material = Vec3(1., 1.0, 1.0);
         }
@@ -707,7 +709,7 @@ public:
             s.scale(Vec3(2., 2., 1.));
             s.rotate_y(180);
             s.build_arrays();
-            s.material.type = Material_Mirror;
+            //s.material.type = Material_Mirror;
             s.material.diffuse_material = Vec3(1.0, 1.0, 1.0);
             s.material.specular_material = Vec3(1.0, 1.0, 1.0);
             s.material.shininess = 16;
@@ -718,14 +720,14 @@ public:
             meshes.resize( meshes.size() + 1 );
             Mesh & m = meshes[meshes.size() - 1];
             m.loadOFF("./meshes/suzanne.off");
-            m.material.type = Material_Glass;
+            //m.material.type = Material_Glass;
             m.material.diffuse_material = Vec3(1., 0., 0.);
             m.material.specular_material = Vec3(1., 0., 0.);
-            //m.rotate_x(-45);
-            //m.rotate_y(-30);
+            m.rotate_x(-45);
+            m.rotate_y(-30);
             m.scale(Vec3(0.5,0.5,0.5));
-            m.translate(Vec3(0,-.5,0));
-           //m.translate(Vec3(1,-1.5,0));
+           // m.translate(Vec3(0,-.5,0));
+            m.translate(Vec3(1,-1.5,0));
             m.build_arrays();
             m.recomputeNormals();
             m.material.shininess = 16;
@@ -733,11 +735,50 @@ public:
             m.material.index_medium = 1.4;
         }
 
+            {
+            meshes.resize( meshes.size() + 1 );
+            Mesh & m = meshes[meshes.size() - 1];
+            m.loadOFF("./meshes/suzanne.off");
+            //m.material.type = Material_Glass;
+            m.material.diffuse_material = Vec3(1., 0., 0.);
+            m.material.specular_material = Vec3(1., 0., 0.);
+            m.rotate_x(-45);
+            m.rotate_y(+30);
+            m.scale(Vec3(0.5,0.5,0.5));
+           // m.translate(Vec3(0,-.5,0));
+            m.translate(Vec3(-1,-1.5,0));
+            m.build_arrays();
+            m.recomputeNormals();
+            m.material.shininess = 16;
+            m.material.transparency = 1.0;
+            m.material.index_medium = 1.4;
+        }
+
+         /* {
+            meshes.resize( meshes.size() + 1 );
+            Mesh & m = meshes[meshes.size() - 1];
+            m.loadOFF("./meshes/tetrahedron.off");
+            m.material.type = Material_Mirror;
+            m.material.diffuse_material = Vec3(1., 0.6, 0.);
+            m.material.specular_material = Vec3(1., 0., 0.);
+            //m.rotate_x(-45);
+            //m.rotate_y(+30);
+            m.scale(Vec3(0.5,0.5,0.5));
+           // m.translate(Vec3(0,0,1));
+            m.translate(Vec3(0,0,0));
+            m.build_arrays();
+            m.recomputeNormals();
+            m.material.shininess = 16;
+            m.material.transparency = 1.0;
+            m.material.index_medium = 1.4;
+        }*/
         /*{ // MIRRORED Sphere
             spheres.resize(spheres.size() + 1);
             Sphere &s = spheres[spheres.size() - 1];
             s.m_center = Vec3(-1.0, -1.25, -0.5);
             s.m_radius = 0.75f;
+            s.m_center = Vec3(0.0, 1.5, 0.0);
+            s.m_radius = 2.5f;
             s.build_arrays();
             s.material.type = Material_Mirror;
             s.material.diffuse_material = Vec3(0.4, 0.1, 0.);
@@ -746,6 +787,150 @@ public:
             s.material.transparency = 0.;
             s.material.index_medium = 0.;
         }*/
+    }
+
+    void setup_cornell_original(){
+        meshes.clear();
+        spheres.clear();
+        squares.clear();
+        lights.clear();
+
+        {
+            lights.resize( lights.size() + 1 );
+            Light & light = lights[lights.size() - 1];
+            light.pos = Vec3( 0.0, 1.5, 0.0 );
+            light.radius = 2.5f;
+            light.powerCorrection = 2.f;
+            //light.type = LightType_Spherical;
+            light.material = Vec3(1,1,1);
+            light.isInCamSpace = false;
+            if (shadowmod == 0){//Hard
+            light.type = LightType_Spherical; 
+            }
+            else{//Smooth
+            light.type = LightType_Quad;
+            Square s;
+            //s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            //s.setQuad(Vec3(-1, -1, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1.5, 1.5);
+            s.setQuad(Vec3(-0.5, -0.5, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1, 1);
+            //s.translate(-1 * light.pos);
+            //s.translate(Vec3(0.,0.5,0.0));
+            //s.scale(Vec3(2., 2., 1.));
+            s.rotate_x(90);
+            s.build_arrays();
+            light.quad = s;
+            }
+        }
+
+        { //Back Wall
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.scale(Vec3(2., 2., 1.));
+            s.translate(Vec3(0., 0., -2.));
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 1.,1.,1. );
+            s.material.specular_material = Vec3( 1.,1.,1. );
+            s.material.shininess = 16;
+        }
+
+        { //Left Wall
+
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.scale(Vec3(2., 2., 1.));
+            s.translate(Vec3(0., 0., -2.));
+            s.rotate_y(90);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 1.,0.,0. );
+            s.material.specular_material = Vec3( 1.,0.,0. );
+            s.material.shininess = 16;
+        }
+
+        { //Right Wall
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(Vec3(0., 0., -2.));
+            s.scale(Vec3(2., 2., 1.));
+            s.rotate_y(-90);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 0.0,1.0,0.0 );
+            s.material.specular_material = Vec3( 0.0,1.0,0.0 );
+            s.material.shininess = 16;
+        }
+
+        { //Floor
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(Vec3(0., 0., -2.));
+            s.scale(Vec3(2., 2., 1.));
+            s.rotate_x(-90);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 1.0,1.0,1.0 );
+            s.material.specular_material = Vec3( 1.0,1.0,1.0 );
+            s.material.shininess = 16;
+        }
+
+        { //Ceiling
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(Vec3(0., 0., -2.));
+            s.scale(Vec3(2., 2., 1.));
+            s.rotate_x(90);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 1.0,1.0,1.0 );
+            s.material.specular_material = Vec3( 1.0,1.0,1.0 );
+            s.material.shininess = 16;
+        }
+
+        { //Front Wall
+            squares.resize( squares.size() + 1 );
+            Square & s = squares[squares.size() - 1];
+            s.setQuad(Vec3(-1., -1., 0.), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
+            s.translate(Vec3(0., 0., -2.));
+            s.scale(Vec3(2., 2., 1.));
+            s.rotate_y(180);
+            s.build_arrays();
+            s.material.diffuse_material = Vec3( 1.0,1.0,1.0 );
+            s.material.specular_material = Vec3( 1.0,1.0,1.0 );
+            s.material.shininess = 16;
+        }
+
+
+        { //GLASS Sphere
+
+            spheres.resize( spheres.size() + 1 );
+            Sphere & s = spheres[spheres.size() - 1];
+            s.m_center = Vec3(1.0, -1.25, 0.5);
+            s.m_radius = 0.75f;
+            s.build_arrays();
+            s.material.type = Material_Glass;
+            s.material.diffuse_material = Vec3( 1.,0.,0. );
+            s.material.specular_material = Vec3( 1.,0.,0. );
+            s.material.shininess = 16;
+            s.material.transparency = 1.0;
+            s.material.index_medium = 1.4;
+        }
+
+
+        { //MIRRORED Sphere
+            spheres.resize( spheres.size() + 1 );
+            Sphere & s = spheres[spheres.size() - 1];
+            s.m_center = Vec3(-1.0, -1.25, -0.5);
+            s.m_radius = 0.75f;
+            s.build_arrays();
+            s.material.type = Material_Mirror;
+            s.material.diffuse_material = Vec3( 1.,1.,1. );
+            s.material.specular_material = Vec3(  1.,1.,1. );
+            s.material.shininess = 16;
+            s.material.transparency = 0.;
+            s.material.index_medium = 0.;
+        }
+
     }
 };
 

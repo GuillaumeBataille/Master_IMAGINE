@@ -13,7 +13,7 @@
 
 #include <cfloat>
 
-#define EPSILON 0.0001
+#define EPSILON 0.5
 // -------------------------------------------
 // Basic Mesh class
 // -------------------------------------------
@@ -219,10 +219,10 @@ public:
         Box Bounding_box = Box(BB_min,BB_max);
         //std::cout<<BB_max<<BB_min<<std::end;
         bool touchingbox = Bounding_box.intersect(ray).intersectionExists;
-        /*if (!touchingbox){
+        if (!touchingbox){
             closestIntersection.intersectionExists = false;
             return closestIntersection;
-        }*/
+        }
         // Note :
         // Creer un objet Triangle pour chaque face
         for(size_t i = 0; i < triangles.size();i++) // Pour tout les triangles de mon mesh

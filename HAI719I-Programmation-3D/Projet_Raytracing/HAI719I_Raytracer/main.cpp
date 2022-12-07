@@ -39,11 +39,11 @@ using namespace std;
 // OpenGL/GLUT application code.
 // -------------------------------------------
 //Variable globale
-#define NBSAMPLE 1
-#define NBBOUNCE 0
+#define NBSAMPLE 20
+#define NBBOUNCE 1
 #define ZNEAR 5
 #define CURRENT_SCENE 4
-#define SCENE_NB 5
+#define SCENE_NB 6
 static GLint window;
 static unsigned int SCREENWIDTH = 480;
 static unsigned int SCREENHEIGHT = 480;
@@ -372,6 +372,7 @@ int main(int argc, char **argv)
     scenes[2].setup_cornell_box();
     scenes[3].setup_single_mesh();
     scenes[4].setup_cornell_box_mesh();
+    scenes[5].setup_cornell_original();
 
     glutMainLoop();
     return EXIT_SUCCESS;
