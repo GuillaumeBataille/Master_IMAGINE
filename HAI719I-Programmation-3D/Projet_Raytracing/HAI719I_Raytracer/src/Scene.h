@@ -612,8 +612,8 @@ public:
             Square s;
             //s.setQuad(Vec3(-1., 0, 0.0), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 2., 2.);
             //s.setQuad(Vec3(-1, -1, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1.5, 1.5);
-            //s.setQuad(Vec3(-0.5, -0.5, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1, 1); // great one
-             s.setQuad(Vec3(-1.5, -1.5, 1.9), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 3, 3);
+            s.setQuad(Vec3(-0.5, -0.5, -1.5), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 1, 1); // great one
+            // s.setQuad(Vec3(-1.5, -1.5, 1.9), Vec3(1., 0, 0.), Vec3(0., 1, 0.), 3, 3);
             //s.translate(-1 * light.pos);
             //s.translate(Vec3(0.,0.5,0.0));
             //s.scale(Vec3(2., 2., 1.));
